@@ -1,0 +1,127 @@
+﻿@page
+@model Watch_Reselling_System___Franco.Pages.ClientsModel
+
+<style>
+    body {
+        font-family: 'Segoe UI';
+        background: #f1f5f9;
+        padding: 40px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+    }
+
+    button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: #000000;
+        color: white;
+        cursor: pointer;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+        background: #e2e8f0;
+    }
+
+    .action a {
+        margin-right: 10px;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .edit {
+        color: #000000;
+    }
+
+    .delete {
+        color: #000000;
+    }
+</style>
+
+<div class="container">
+
+    <h2>@(Model.IsEdit ? "Edit Client" : "Add Client")</h2>
+
+    <div class="card">
+        <form method="post">
+            <input type="hidden" name="ClientId" value="@Model.Input.ClientId" />
+
+            <input name="FirstName" value="@Model.Input.FirstName" placeholder="First Name" required />
+            <input name="LastName" value="@Model.Input.LastName" placeholder="Last Name" required />
+            <input name="Email" value="@Model.Input.Email" placeholder="Email" required />
+            <input name="ContactNumber" value="@Model.Input.ContactNumber" placeholder="Contact Number" required />
+
+            <button>@(Model.IsEdit ? "Update Client" : "Add Client")</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Client List</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var c in Model.ClientList)
+                {
+                    <tr>
+                        <td>@c.ClientId</td>
+                        <td>@c.FirstName @c.LastName</td>
+                        <td>@c.Email</td>
+                        <td>@c.ContactNumber</td>
+                        <td class="action">
+                            <a class="edit" href="?EditId=@c.ClientId">Edit</a>
+                            <a class="delete"
+                               href="?DeleteId=@c.ClientId"
+                               onclick="return confirm('Delete this client?')">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>

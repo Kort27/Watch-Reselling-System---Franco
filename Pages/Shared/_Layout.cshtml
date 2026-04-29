@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Watch System</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+        }
+
+        /* NAVBAR */
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 40px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 20px;
+            color: #0f172a;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            color: #0f172a;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+            .nav-btn:hover {
+                background: #0ea5e9;
+                color: white;
+            }
+
+        /* MAIN CONTENT */
+        .main-container {
+            padding: 30px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header>
+        <div class="nav-container">
+
+            <div class="logo">
+                ⌚ Watch Reselling System
+            </div>
+
+            <div class="nav-buttons">
+                <a asp-page="/Index" class="nav-btn">Home</a>
+                <a asp-page="/Clients" class="nav-btn">Clients</a>
+                <a asp-page="/Watch" class="nav-btn">Watches</a>
+                <a asp-page="/Transaction" class="nav-btn">Transactions</a>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <div class="main-container">
+        @RenderBody()
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; 2026 - Watch Reselling System
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

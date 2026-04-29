@@ -1,0 +1,100 @@
+﻿@page
+@model Watch_Reselling_System___Franco.Pages.IndexModel
+
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f1f5f9;
+        padding: 40px;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: auto;
+    }
+
+    .header {
+        margin-bottom: 30px;
+    }
+
+    .cards {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        flex: 1;
+        min-width: 250px;
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: black;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+        transition: 0.2s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #64748b;
+        }
+
+    .count {
+        font-size: 28px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+</style>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Dashboard</h1>
+        <p>Watch Reselling System Overview</p>
+    </div>
+
+    <div class="cards">
+
+        <!-- CLIENTS -->
+        <a asp-page="/Clients" class="card">
+            <h2>👤 Clients</h2>
+            <p>Total Clients</p>
+            <div class="count">@Model.TotalClients</div>
+        </a>
+
+        <!-- WATCHES (STOCK VERSION) -->
+        <a asp-page="/Watch" class="card">
+            <h2>⌚ Watches</h2>
+            <p>Total Stock Available</p>
+
+            <div class="count"
+                 style="color:@(Model.TotalStock == 0 ? "red" : "green")">
+                @Model.TotalStock
+            </div>
+
+            @if (Model.LowStockCount > 0)
+            {
+                <div style="color:red;font-size:12px;margin-top:5px;">
+                     @Model.LowStockCount Low Stock
+                </div>
+            }
+        </a>
+
+        <!-- TRANSACTIONS -->
+        <a asp-page="/Transaction" class="card">
+            <h2>💳 Transactions</h2>
+            <p>Total Transactions</p>
+            <div class="count">@Model.TotalTransactions</div>
+        </a>
+
+    </div>
+
+</div>

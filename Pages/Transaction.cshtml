@@ -1,0 +1,192 @@
+﻿@page
+@model Watch_Reselling_System___Franco.Pages.TransactionModel
+
+<style>
+    body {
+        font-family: 'Segoe UI';
+        background: #f1f5f9;
+        padding: 40px;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: auto;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    select {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+    }
+
+    button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: #000000;
+        color: white;
+        font-weight: bold;
+    }
+
+    .error-box {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+        background: #e2e8f0;
+    }
+
+    .edit {
+        color: #000000;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .delete {
+        color: #000000;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container">
+
+    <h2>Transactions</h2>
+
+    <!-- ERROR DISPLAY -->
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="error-box">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>@error.ErrorMessage</div>
+            }
+        </div>
+    }
+
+    <!-- FORM -->
+    <div class="card">
+        <form method="post">
+
+            <input type="hidden" name="TransactionId" value="@Model.Current.TransactionId" />
+
+            <select name="ClientId">
+                @foreach (var c in Model.Clients)
+                {
+                    <option value="@c.ClientId"
+                            selected="@(c.ClientId == Model.Current.ClientId)">
+                        @c.FirstName @c.LastName
+                    </option>
+                }
+            </select>
+
+            <select name="WatchId" id="watchSelect">
+                @foreach (var w in Model.Watches)
+                {
+                    <option value="@w.watch_id">
+                        @w.watch_modelname
+                        @if (w.stock <= 0)
+                        {
+                            @: ( Out of Stock)
+                        }
+                        else if (w.stock <= 3)
+                        {
+                            @: ( Low: @w.stock)
+                        }
+                        else
+                        {
+                            @: (Stock: @w.stock)
+                        }
+                    </option>
+                }
+            </select>
+
+            <select name="TransactionType" id="typeSelect">
+                <option selected="@(Model.Current.TransactionType == "Buy")">Buy</option>
+                <option selected="@(Model.Current.TransactionType == "Sell")">Sell</option>
+            </select>
+
+            <select name="PaymentStatus">
+                <option>Pending</option>
+                <option>Paid</option>
+                <option>Cancelled</option>
+            </select>
+
+            <button>@(Model.IsEdit ? "Update Transaction" : "Add Transaction")</button>
+        </form>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>Watch</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var t in Model.TransactionList)
+                {
+                    <tr>
+                        <td>@t.TransactionId</td>
+                        <td>@t.ClientName</td>
+                        <td>@t.WatchName</td>
+                        <td>@t.TransactionType</td>
+                        <td>@t.TransactionDate.ToShortDateString()</td>
+                        <td>@t.PaymentStatus</td>
+                        <td>
+                            <a class="edit" href="?EditId=@t.TransactionId">Edit</a>
+                            <a class="delete" href="?DeleteId=@t.TransactionId"
+                               onclick="return confirm('Delete?')">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById("watchSelect").addEventListener("change", function () {
+        const selectedText = this.options[this.selectedIndex].text;
+        const typeSelect = document.getElementById("typeSelect");
+
+        if (selectedText.includes("Out of Stock")) {
+            typeSelect.value = "Buy";
+            alert("This watch is OUT OF STOCK. You cannot SELL.");
+        }   
+    });
+</script>

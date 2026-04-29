@@ -1,0 +1,129 @@
+﻿@page
+@model Watch_Reselling_System___Franco.Pages.WatchModel
+
+<style>
+    body {
+        font-family: 'Segoe UI';
+        background: #f1f5f9;
+        padding: 40px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+    }
+
+    button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: #000000;
+        color: white;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+        background: #e2e8f0;
+    }
+
+    .action a {
+        margin-right: 10px;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .edit {
+        color: #000000;
+    }
+
+    .delete {
+        color: #000000;
+    }
+</style>
+
+<div class="container">
+
+    <div class="card">
+        <form method="post">
+            <input type="hidden" name="watch_id" value="@Model.Current.watch_id" />
+
+            <input type="text" name="watch_modelname" placeholder="Model"
+                   value="@Model.Current.watch_modelname" required />
+
+            <input type="number" name="stock" placeholder="Stock"
+                   value="@Model.Current.stock" required />
+
+            <select name="condition">
+                <option>Brand New</option>
+                <option>Used - Good</option>
+                <option>Used - Fair</option>
+            </select>
+
+            <input type="number" name="price" placeholder="Price"
+                   value="@Model.Current.price" required />
+
+            <button>@(Model.IsEdit ? "Update" : "Add")</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Model</th>
+                    <th>Condition</th>
+                    <th>Stock</th>
+                    <th>Price</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var w in Model.WatchList)
+                {
+                    <tr>
+                        <td>@w.watch_id</td>
+                        <td>@w.watch_modelname</td>
+                        <td>@w.condition</td>
+                        <td>@w.stock</td>
+                        <td>₱@w.price</td>
+                        <td class="action">
+                            <a class="edit" href="?EditId=@w.watch_id">Edit</a>
+                            <a class="delete" href="?DeleteId=@w.watch_id"
+                               onclick="return confirm('Delete?')">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
