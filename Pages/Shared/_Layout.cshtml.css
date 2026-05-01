@@ -39,6 +39,36 @@ button.accept-policy {
   line-height: inherit;
 }
 
+.icon {
+    font-size: 22px;
+    filter: grayscale(100%) brightness(0); /* makes emoji dark */
+}
+
+.logo {
+    color: #020617; /* almost black */
+    letter-spacing: 0.5px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    font-size: 22px;
+}
+
+    /* REMOVE LINK UNDERLINE + FORCE DARK */
+    .logo a {
+        text-decoration: none !important;
+        color: #0f172a !important;
+    }
+
+    /* MAKE ICON DARK */
+    .logo img,
+    .logo svg {
+        filter: brightness(0) saturate(100%);
+    }
+
 .footer {
   position: absolute;
   bottom: 0;

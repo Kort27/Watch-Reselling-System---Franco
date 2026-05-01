@@ -16,5 +16,7 @@
         public decimal Price { get; set; }
 
         public DateTime TransactionDate { get; set; }
+
+
     }
 }
