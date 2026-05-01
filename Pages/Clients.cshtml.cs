@@ -17,90 +17,104 @@ namespace Watch_Reselling_System___Franco.Pages
             _config = config;
         }
 
-        public List<Clients> ClientList { get; set; } = new List<Clients>();
+        public List<Clients> ClientList { get; set; } = new();
+        public List<Clients> AllClients { get; set; } = new();
+        public List<Transaction> PurchasedTransactions { get; set; } = new();
 
-        [BindProperty] public Clients Input { get; set; } = new Clients();
-        [BindProperty(SupportsGet = true)] public int? DeleteId { get; set; }
-        [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
+        // 🔥 REQUIRED FOR FORM BINDING
+        [BindProperty]
+        public Clients Current { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public int? DeleteId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? EditId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? SelectedClientId { get; set; }
 
         public bool IsEdit => EditId.HasValue;
 
+        public int TotalPurchases { get; set; }
+
         public void OnGet()
         {
-            string connStr = _config.GetConnectionString("DefaultConnection");
+            using SqlConnection conn = new(_config.GetConnectionString("DefaultConnection"));
+            conn.Open();
 
             // DELETE
             if (DeleteId.HasValue)
             {
-                using var conn = new SqlConnection(connStr);
-                conn.Open();
                 var cmd = new SqlCommand("DELETE FROM Clients WHERE ClientId=@id", conn);
-                cmd.Parameters.AddWithValue("@id", DeleteId);
+                cmd.Parameters.AddWithValue("@id", DeleteId.Value);
                 cmd.ExecuteNonQuery();
 
                 Response.Redirect("/Clients");
                 return;
             }
 
-            // LOAD EDIT DATA
+            // EDIT LOAD
             if (EditId.HasValue)
             {
-                using var conn = new SqlConnection(connStr);
-                conn.Open();
-
                 var cmd = new SqlCommand("SELECT * FROM Clients WHERE ClientId=@id", conn);
-                cmd.Parameters.AddWithValue("@id", EditId);
+                cmd.Parameters.AddWithValue("@id", EditId.Value);
 
-                using var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                var r = cmd.ExecuteReader();
+                if (r.Read())
                 {
-                    Input = new Clients
+                    Current = new Clients
                     {
-                        ClientId = Convert.ToInt32(reader["ClientId"]),
-                        FirstName = reader["FirstName"].ToString(),
-                        LastName = reader["LastName"].ToString(),
-                        Email = reader["Email"].ToString(),
-                        ContactNumber = reader["ContactNumber"].ToString()
+                        ClientId = (int)r["ClientId"],
+                        FirstName = r["FirstName"].ToString(),
+                        LastName = r["LastName"].ToString(),
+                        Email = r["Email"].ToString(),
+                        ContactNumber = r["ContactNumber"].ToString()
                     };
                 }
+                r.Close();
             }
 
-            LoadClients();
+            LoadAllClients(conn);
+            LoadClients(conn);
+
+            if (SelectedClientId.HasValue)
+            {
+                LoadTotalPurchases(conn);
+                LoadTransactions(conn);
+            }
         }
 
         public IActionResult OnPost()
         {
-            string connStr = _config.GetConnectionString("DefaultConnection");
-
-            using var conn = new SqlConnection(connStr);
+            using SqlConnection conn = new(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-            if (Input.ClientId > 0)
+            if (IsEdit)
             {
-                // UPDATE
-                var cmd = new SqlCommand(@"UPDATE Clients 
-                    SET FirstName=@f, LastName=@l, Email=@e, ContactNumber=@c 
+                var cmd = new SqlCommand(@"
+                    UPDATE Clients
+                    SET FirstName=@f, LastName=@l, Email=@e, ContactNumber=@c
                     WHERE ClientId=@id", conn);
 
-                cmd.Parameters.AddWithValue("@id", Input.ClientId);
-                cmd.Parameters.AddWithValue("@f", Input.FirstName);
-                cmd.Parameters.AddWithValue("@l", Input.LastName);
-                cmd.Parameters.AddWithValue("@e", Input.Email);
-                cmd.Parameters.AddWithValue("@c", Input.ContactNumber);
+                cmd.Parameters.AddWithValue("@id", Current.ClientId);
+                cmd.Parameters.AddWithValue("@f", Current.FirstName);
+                cmd.Parameters.AddWithValue("@l", Current.LastName);
+                cmd.Parameters.AddWithValue("@e", Current.Email);
+                cmd.Parameters.AddWithValue("@c", Current.ContactNumber);
 
                 cmd.ExecuteNonQuery();
             }
             else
             {
-                // INSERT
-                var cmd = new SqlCommand(@"INSERT INTO Clients 
-                    (FirstName, LastName, Email, ContactNumber)
+                var cmd = new SqlCommand(@"
+                    INSERT INTO Clients (FirstName, LastName, Email, ContactNumber)
                     VALUES (@f,@l,@e,@c)", conn);
 
-                cmd.Parameters.AddWithValue("@f", Input.FirstName);
-                cmd.Parameters.AddWithValue("@l", Input.LastName);
-                cmd.Parameters.AddWithValue("@e", Input.Email);
-                cmd.Parameters.AddWithValue("@c", Input.ContactNumber);
+                cmd.Parameters.AddWithValue("@f", Current.FirstName);
+                cmd.Parameters.AddWithValue("@l", Current.LastName);
+                cmd.Parameters.AddWithValue("@e", Current.Email);
+                cmd.Parameters.AddWithValue("@c", Current.ContactNumber);
 
                 cmd.ExecuteNonQuery();
             }
@@ -108,27 +122,76 @@ namespace Watch_Reselling_System___Franco.Pages
             return RedirectToPage("/Clients");
         }
 
-        void LoadClients()
+        private void LoadAllClients(SqlConnection conn)
         {
-            string connStr = _config.GetConnectionString("DefaultConnection");
-
-            using var conn = new SqlConnection(connStr);
-            conn.Open();
-
             var cmd = new SqlCommand("SELECT * FROM Clients", conn);
-            using var reader = cmd.ExecuteReader();
+            var r = cmd.ExecuteReader();
 
-            while (reader.Read())
+            while (r.Read())
+            {
+                AllClients.Add(new Clients
+                {
+                    ClientId = (int)r["ClientId"],
+                    FirstName = r["FirstName"].ToString(),
+                    LastName = r["LastName"].ToString()
+                });
+            }
+            r.Close();
+        }
+
+        private void LoadClients(SqlConnection conn)
+        {
+            var cmd = new SqlCommand("SELECT * FROM Clients", conn);
+            var r = cmd.ExecuteReader();
+
+            while (r.Read())
             {
                 ClientList.Add(new Clients
                 {
-                    ClientId = Convert.ToInt32(reader["ClientId"]),
-                    FirstName = reader["FirstName"].ToString(),
-                    LastName = reader["LastName"].ToString(),
-                    Email = reader["Email"].ToString(),
-                    ContactNumber = reader["ContactNumber"].ToString()
+                    ClientId = (int)r["ClientId"],
+                    FirstName = r["FirstName"].ToString(),
+                    LastName = r["LastName"].ToString(),
+                    Email = r["Email"].ToString(),
+                    ContactNumber = r["ContactNumber"].ToString()
                 });
             }
+            r.Close();
+        }
+
+        private void LoadTotalPurchases(SqlConnection conn)
+        {
+            var cmd = new SqlCommand(@"
+        SELECT ISNULL(SUM(Quantity), 0)
+        FROM Client_Transaction
+        WHERE ClientId=@id AND TransactionType='Sell'", conn);
+
+            cmd.Parameters.AddWithValue("@id", SelectedClientId.Value);
+            TotalPurchases = Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        private void LoadTransactions(SqlConnection conn)
+        {
+            var cmd = new SqlCommand(@"
+                SELECT w.watch_modelname, t.TransactionType, t.TransactionDate
+                FROM Client_Transaction t
+                JOIN Watch w ON t.WatchId = w.watch_id
+                WHERE t.ClientId=@id
+                ORDER BY t.TransactionDate DESC", conn);
+
+            cmd.Parameters.AddWithValue("@id", SelectedClientId.Value);
+
+            var r = cmd.ExecuteReader();
+
+            while (r.Read())
+            {
+                PurchasedTransactions.Add(new Transaction
+                {
+                    WatchName = r["watch_modelname"].ToString(),
+                    TransactionType = r["TransactionType"].ToString(),
+                    TransactionDate = (DateTime)r["TransactionDate"]
+                });
+            }
+            r.Close();
         }
     }
 }

@@ -2,142 +2,150 @@
 @model Watch_Reselling_System___Franco.Pages.TransactionModel
 
 <style>
-    body {
-        font-family: 'Segoe UI';
-        background: #f1f5f9;
-        padding: 40px;
-    }
+body {
+    font-family: 'Segoe UI';
+    background: #f1f5f9;
+    padding: 30px;
+}
 
-    .container {
-        max-width: 1000px;
-        margin: auto;
-    }
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
 
-    .card {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
 
-    select {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-    }
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
 
-    button {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 8px;
-        background: #000000;
-        color: white;
-        font-weight: bold;
-    }
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+}
 
-    .error-box {
-        background: #fee2e2;
-        color: #b91c1c;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
+.main-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: black;
+    color: white;
+}
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-    }
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    th, td {
-        padding: 12px;
-        border-bottom: 1px solid #e2e8f0;
-    }
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
 
-    th {
-        background: #e2e8f0;
-    }
+th {
+    background: #e2e8f0;
+}
 
-    .edit {
-        color: #000000;
-        font-weight: bold;
-        margin-right: 10px;
-    }
+.action a {
+    margin-right: 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
 
-    .delete {
-        color: #000000;
-        font-weight: bold;
-    }
+.edit { color: #000; }
+.delete { color: red; }
+
+.error {
+    color: red;
+    margin-bottom: 10px;
+}
 </style>
 
 <div class="container">
 
-    <h2>Transactions</h2>
+    <!-- HEADER -->
+    <div class="header">
+        <h2>Transactions</h2>
+    </div>
 
-    <!-- ERROR DISPLAY -->
-    @if (!ViewData.ModelState.IsValid)
+    <!-- ERROR -->
+    @if (TempData["Error"] != null)
     {
-        <div class="error-box">
-            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <div>@error.ErrorMessage</div>
-            }
-        </div>
+        <div class="error">@TempData["Error"]</div>
     }
 
     <!-- FORM -->
     <div class="card">
         <form method="post">
 
-            <input type="hidden" name="TransactionId" value="@Model.Current.TransactionId" />
+            <input type="hidden" name="Current.TransactionId" value="@Model.Current.TransactionId" />
 
-            <select name="ClientId">
+            <!-- CLIENT -->
+            <select name="Current.ClientId" required>
                 @foreach (var c in Model.Clients)
                 {
                     <option value="@c.ClientId"
-                            selected="@(c.ClientId == Model.Current.ClientId)">
+                        selected="@(Model.Current.ClientId == c.ClientId ? "selected" : null)">
                         @c.FirstName @c.LastName
                     </option>
                 }
             </select>
 
-            <select name="WatchId" id="watchSelect">
+            <!-- WATCH -->
+            <select id="watchSelect" name="Current.WatchId" required>
                 @foreach (var w in Model.Watches)
                 {
-                    <option value="@w.watch_id">
-                        @w.watch_modelname
-                        @if (w.stock <= 0)
-                        {
-                            @: ( Out of Stock)
-                        }
-                        else if (w.stock <= 3)
-                        {
-                            @: ( Low: @w.stock)
-                        }
-                        else
-                        {
-                            @: (Stock: @w.stock)
-                        }
-                    </option>
+                    <option value="@w.watch_id"
+                            data-price="@w.price"
+                            disabled="@(w.stock <= 0 ? "disabled" : null)"
+                            selected="@(Model.Current.WatchId == w.watch_id ? "selected" : null)">
+                        @w.watch_modelname (₱@w.price | Stock:@w.stock)
+                    </option>   
                 }
             </select>
 
-            <select name="TransactionType" id="typeSelect">
-                <option selected="@(Model.Current.TransactionType == "Buy")">Buy</option>
-                <option selected="@(Model.Current.TransactionType == "Sell")">Sell</option>
+            <!-- TYPE -->
+            <select name="Current.TransactionType" required>
+                <option value="Sell" selected="@(Model.Current.TransactionType == "Sell" ? "selected" : null)">
+                    Sell (to client)
+                </option>
+                <option value="Buy" selected="@(Model.Current.TransactionType == "Buy" ? "selected" : null)">
+                    Buy (from client)
+                </option>
             </select>
 
-            <select name="PaymentStatus">
-                <option>Pending</option>
-                <option>Paid</option>
-                <option>Cancelled</option>
-            </select>
+            <!-- PRICE (AUTO) -->
+            <input type="number" id="priceInput" readonly placeholder="Price" />
 
-            <button>@(Model.IsEdit ? "Update Transaction" : "Add Transaction")</button>
+            <!-- QUANTITY -->
+            <input type="number"
+                   id="qtyInput"
+                   name="Current.Quantity"
+                   value="@Model.Current.Quantity"
+                   min="1"
+                   placeholder="Quantity"
+                   required />
+
+            <!-- TOTAL -->
+            <input type="text" id="total" readonly placeholder="Total" />
+
+            <button class="main-btn">
+                @(Model.IsEdit ? "Update Transaction" : "Add Transaction")
+            </button>
+
         </form>
     </div>
 
@@ -146,12 +154,13 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Client</th>
                     <th>Watch</th>
                     <th>Type</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
                     <th>Date</th>
-                    <th>Status</th>
                     <th></th>
                 </tr>
             </thead>
@@ -160,16 +169,20 @@
                 @foreach (var t in Model.TransactionList)
                 {
                     <tr>
-                        <td>@t.TransactionId</td>
                         <td>@t.ClientName</td>
                         <td>@t.WatchName</td>
                         <td>@t.TransactionType</td>
+                        <td>@t.Quantity</td>
+                        <td>₱@t.Price</td>
+                        <td>₱@(t.Price * t.Quantity)</td>
                         <td>@t.TransactionDate.ToShortDateString()</td>
-                        <td>@t.PaymentStatus</td>
-                        <td>
+                        <td class="action">
                             <a class="edit" href="?EditId=@t.TransactionId">Edit</a>
-                            <a class="delete" href="?DeleteId=@t.TransactionId"
-                               onclick="return confirm('Delete?')">Delete</a>
+                            <a class="delete"
+                               href="?DeleteId=@t.TransactionId"
+                               onclick="return confirm('Delete this transaction?')">
+                                Delete
+                            </a>
                         </td>
                     </tr>
                 }
@@ -179,14 +192,30 @@
 
 </div>
 
+<!-- JS -->
 <script>
-    document.getElementById("watchSelect").addEventListener("change", function () {
-        const selectedText = this.options[this.selectedIndex].text;
-        const typeSelect = document.getElementById("typeSelect");
+const watchSelect = document.getElementById("watchSelect");
+const priceInput = document.getElementById("priceInput");
+const qtyInput = document.getElementById("qtyInput");
+const total = document.getElementById("total");
 
-        if (selectedText.includes("Out of Stock")) {
-            typeSelect.value = "Buy";
-            alert("This watch is OUT OF STOCK. You cannot SELL.");
-        }   
-    });
+function updatePrice() {
+    const selected = watchSelect.options[watchSelect.selectedIndex];
+    const price = selected.getAttribute("data-price") || 0;
+    priceInput.value = price;
+    updateTotal();
+}
+
+function updateTotal() {
+    const price = parseFloat(priceInput.value) || 0;
+    const qty = parseInt(qtyInput.value) || 0;
+    total.value = "₱" + (price * qty);
+}
+
+watchSelect.addEventListener("change", updatePrice);
+qtyInput.addEventListener("input", updateTotal);
+
+window.onload = function () {
+    updatePrice();
+};
 </script>

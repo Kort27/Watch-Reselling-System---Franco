@@ -30,136 +30,138 @@ namespace Watch_Reselling_System___Franco.Pages
 
         public void OnGet()
         {
-            string connStr = _config.GetConnectionString("DefaultConnection");
-
-            using SqlConnection conn = new(connStr);
+            using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-            // DELETE + STOCK REVERT
+            // DELETE
             if (DeleteId.HasValue)
             {
-                var getCmd = new SqlCommand("SELECT WatchId, TransactionType FROM Client_Transaction WHERE TransactionId=@id", conn);
-                getCmd.Parameters.AddWithValue("@id", DeleteId.Value);
-
-                using var reader = getCmd.ExecuteReader();
-
-                int watchId = 0;
+                int watchId = 0, qty = 0;
                 string type = "";
 
-                if (reader.Read())
+                var get = new SqlCommand("SELECT * FROM Client_Transaction WHERE TransactionId=@id", conn);
+                get.Parameters.AddWithValue("@id", DeleteId.Value);
+
+                using var r = get.ExecuteReader();
+                if (r.Read())
                 {
-                    watchId = (int)reader["WatchId"];
-                    type = reader["TransactionType"].ToString();
+                    watchId = SafeInt(r["WatchId"]);
+                    qty = SafeInt(r["Quantity"]);
+                    type = SafeString(r["TransactionType"]);
                 }
-                reader.Close();
+                r.Close();
 
-                string revert = type == "Buy"
-                    ? "UPDATE Watch SET stock = stock - 1 WHERE watch_id=@w"
-                    : "UPDATE Watch SET stock = stock + 1 WHERE watch_id=@w";
+                if (type == "Sell") UpdateStock(conn, watchId, qty);
+                else if (type == "Buy") UpdateStock(conn, watchId, -qty);
 
-                var revertCmd = new SqlCommand(revert, conn);
-                revertCmd.Parameters.AddWithValue("@w", watchId);
-                revertCmd.ExecuteNonQuery();
-
-                var delCmd = new SqlCommand("DELETE FROM Client_Transaction WHERE TransactionId=@id", conn);
-                delCmd.Parameters.AddWithValue("@id", DeleteId.Value);
-                delCmd.ExecuteNonQuery();
+                new SqlCommand("DELETE FROM Client_Transaction WHERE TransactionId=@id", conn)
+                {
+                    Parameters = { new SqlParameter("@id", DeleteId.Value) }
+                }.ExecuteNonQuery();
 
                 Response.Redirect("/Transaction");
                 return;
             }
 
-            // LOAD EDIT
+            // EDIT LOAD
             if (EditId.HasValue)
             {
                 var cmd = new SqlCommand("SELECT * FROM Client_Transaction WHERE TransactionId=@id", conn);
                 cmd.Parameters.AddWithValue("@id", EditId.Value);
 
-                var reader = cmd.ExecuteReader();
-                if (reader.Read())
+                using var r = cmd.ExecuteReader();
+                if (r.Read())
                 {
                     Current = new Transaction
                     {
-                        TransactionId = (int)reader["TransactionId"],
-                        ClientId = (int)reader["ClientId"],
-                        WatchId = (int)reader["WatchId"],
-                        TransactionType = reader["TransactionType"].ToString(),
-                        PaymentStatus = reader["PaymentStatus"].ToString()
+                        TransactionId = SafeInt(r["TransactionId"]),
+                        ClientId = SafeInt(r["ClientId"]),
+                        WatchId = SafeInt(r["WatchId"]),
+                        TransactionType = SafeString(r["TransactionType"]),
+                        Quantity = SafeInt(r["Quantity"]),
+                        Price = SafeDecimal(r["Price"])
                     };
                 }
-                reader.Close();
             }
 
-            LoadClients(conn);
-            LoadWatches(conn);
-            LoadTransactions(conn);
+            Load(conn);
         }
 
         public IActionResult OnPost()
         {
-            string connStr = _config.GetConnectionString("DefaultConnection");
-
-            using SqlConnection conn = new(connStr);
+            using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-            // REVERT OLD STOCK (EDIT)
-            if (Current.TransactionId > 0)
+            if (Current.Quantity <= 0)
             {
-                var oldCmd = new SqlCommand("SELECT WatchId, TransactionType FROM Client_Transaction WHERE TransactionId=@id", conn);
-                oldCmd.Parameters.AddWithValue("@id", Current.TransactionId);
-
-                using var reader = oldCmd.ExecuteReader();
-
-                int oldWatchId = 0;
-                string oldType = "";
-
-                if (reader.Read())
-                {
-                    oldWatchId = (int)reader["WatchId"];
-                    oldType = reader["TransactionType"].ToString();
-                }
-                reader.Close();
-
-                string revert = oldType == "Buy"
-                    ? "UPDATE Watch SET stock = stock - 1 WHERE watch_id=@w"
-                    : "UPDATE Watch SET stock = stock + 1 WHERE watch_id=@w";
-
-                var revertCmd = new SqlCommand(revert, conn);
-                revertCmd.Parameters.AddWithValue("@w", oldWatchId);
-                revertCmd.ExecuteNonQuery();
+                TempData["Error"] = "Quantity must be greater than 0!";
+                return RedirectToPage();
             }
 
-            // 🚨 PREVENT NEGATIVE STOCK
+            // 🔥 GET REAL PRICE FROM DB
+            var priceCmd = new SqlCommand("SELECT price FROM Watch WHERE watch_id=@id", conn);
+            priceCmd.Parameters.AddWithValue("@id", Current.WatchId);
+            decimal realPrice = SafeDecimal(priceCmd.ExecuteScalar());
+
+            // RESTORE OLD STOCK (EDIT)
+            if (IsEdit)
+            {
+                var old = new SqlCommand("SELECT * FROM Client_Transaction WHERE TransactionId=@id", conn);
+                old.Parameters.AddWithValue("@id", Current.TransactionId);
+
+                using var r = old.ExecuteReader();
+                if (r.Read())
+                {
+                    int oldWatch = SafeInt(r["WatchId"]);
+                    int oldQty = SafeInt(r["Quantity"]);
+                    string oldType = SafeString(r["TransactionType"]);
+
+                    if (oldType == "Sell") UpdateStock(conn, oldWatch, oldQty);
+                    else if (oldType == "Buy") UpdateStock(conn, oldWatch, -oldQty);
+                }
+                r.Close();
+            }
+
+            // STOCK LOGIC
             if (Current.TransactionType == "Sell")
             {
-                var checkCmd = new SqlCommand("SELECT stock FROM Watch WHERE watch_id=@w", conn);
-                checkCmd.Parameters.AddWithValue("@w", Current.WatchId);
+                var check = new SqlCommand("SELECT stock FROM Watch WHERE watch_id=@id", conn);
+                check.Parameters.AddWithValue("@id", Current.WatchId);
 
-                int stock = (int)checkCmd.ExecuteScalar();
+                int stock = SafeInt(check.ExecuteScalar());
 
                 if (stock <= 0)
                 {
-                    ModelState.AddModelError("", "❌ Cannot sell. Watch is OUT OF STOCK.");
-                    LoadClients(conn);
-                    LoadWatches(conn);
-                    LoadTransactions(conn);
-                    return Page();
+                    TempData["Error"] = "Out of stock!";
+                    return RedirectToPage();
                 }
+
+                if (stock < Current.Quantity)
+                {
+                    TempData["Error"] = $"Only {stock} available!";
+                    return RedirectToPage();
+                }
+
+                UpdateStock(conn, Current.WatchId, -Current.Quantity);
+            }
+            else
+            {
+                UpdateStock(conn, Current.WatchId, Current.Quantity);
             }
 
-            // INSERT OR UPDATE
-            if (Current.TransactionId > 0)
+            if (IsEdit)
             {
                 var cmd = new SqlCommand(@"
                     UPDATE Client_Transaction
-                    SET ClientId=@c, WatchId=@w, TransactionType=@t, PaymentStatus=@p
+                    SET ClientId=@c, WatchId=@w, TransactionType=@t, Quantity=@q, Price=@p
                     WHERE TransactionId=@id", conn);
 
                 cmd.Parameters.AddWithValue("@id", Current.TransactionId);
                 cmd.Parameters.AddWithValue("@c", Current.ClientId);
                 cmd.Parameters.AddWithValue("@w", Current.WatchId);
                 cmd.Parameters.AddWithValue("@t", Current.TransactionType);
-                cmd.Parameters.AddWithValue("@p", Current.PaymentStatus);
+                cmd.Parameters.AddWithValue("@q", Current.Quantity);
+                cmd.Parameters.AddWithValue("@p", realPrice);
 
                 cmd.ExecuteNonQuery();
             }
@@ -167,88 +169,79 @@ namespace Watch_Reselling_System___Franco.Pages
             {
                 var cmd = new SqlCommand(@"
                     INSERT INTO Client_Transaction
-                    (ClientId, WatchId, TransactionType, TransactionDate, PaymentStatus)
-                    VALUES (@c, @w, @t, GETDATE(), @p)", conn);
+                    (ClientId, WatchId, TransactionType, Quantity, Price, TransactionDate)
+                    VALUES (@c,@w,@t,@q,@p,GETDATE())", conn);
 
                 cmd.Parameters.AddWithValue("@c", Current.ClientId);
                 cmd.Parameters.AddWithValue("@w", Current.WatchId);
                 cmd.Parameters.AddWithValue("@t", Current.TransactionType);
-                cmd.Parameters.AddWithValue("@p", Current.PaymentStatus);
+                cmd.Parameters.AddWithValue("@q", Current.Quantity);
+                cmd.Parameters.AddWithValue("@p", realPrice);
 
                 cmd.ExecuteNonQuery();
             }
 
-            // APPLY NEW STOCK
-            string updateStock = Current.TransactionType == "Buy"
-                ? "UPDATE Watch SET stock = stock + 1 WHERE watch_id=@w"
-                : "UPDATE Watch SET stock = stock - 1 WHERE watch_id=@w";
-
-            var stockCmd = new SqlCommand(updateStock, conn);
-            stockCmd.Parameters.AddWithValue("@w", Current.WatchId);
-            stockCmd.ExecuteNonQuery();
-
-            return RedirectToPage("/Transaction");
+            return RedirectToPage();
         }
 
-        private void LoadClients(SqlConnection conn)
+        private void Load(SqlConnection conn)
         {
-            var cmd = new SqlCommand("SELECT * FROM Clients", conn);
-            var reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-            {
+            using var c = new SqlCommand("SELECT * FROM Clients", conn).ExecuteReader();
+            while (c.Read())
                 Clients.Add(new Clients
                 {
-                    ClientId = (int)reader["ClientId"],
-                    FirstName = reader["FirstName"].ToString(),
-                    LastName = reader["LastName"].ToString()
+                    ClientId = SafeInt(c["ClientId"]),
+                    FirstName = SafeString(c["FirstName"]),
+                    LastName = SafeString(c["LastName"])
                 });
-            }
-            reader.Close();
-        }
+            c.Close();
 
-        private void LoadWatches(SqlConnection conn)
-        {
-            var cmd = new SqlCommand("SELECT * FROM Watch", conn);
-            var reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-            {
+            using var w = new SqlCommand("SELECT * FROM Watch", conn).ExecuteReader();
+            while (w.Read())
                 Watches.Add(new Watch
                 {
-                    watch_id = (int)reader["watch_id"],
-                    watch_modelname = reader["watch_modelname"].ToString(),
-                    stock = (int)reader["stock"]
+                    watch_id = SafeInt(w["watch_id"]),
+                    watch_modelname = SafeString(w["watch_modelname"]),
+                    stock = SafeInt(w["stock"]),
+                    price = SafeDecimal(w["price"]) // 🔥 IMPORTANT
                 });
-            }
-            reader.Close();
-        }
+            w.Close();
 
-        private void LoadTransactions(SqlConnection conn)
-        {
-            string query = @"
-            SELECT t.*, 
-                   c.FirstName + ' ' + c.LastName AS ClientName,
-                   w.watch_modelname AS WatchName
-            FROM Client_Transaction t
-            JOIN Clients c ON t.ClientId = c.ClientId
-            JOIN Watch w ON t.WatchId = w.watch_id";
+            using var t = new SqlCommand(@"
+                SELECT t.TransactionId,
+                c.FirstName + ' ' + c.LastName AS ClientName,
+                w.watch_modelname AS WatchName,
+                t.*
+                FROM Client_Transaction t
+                JOIN Clients c ON t.ClientId = c.ClientId
+                JOIN Watch w ON t.WatchId = w.watch_id
+                ORDER BY t.TransactionDate DESC", conn).ExecuteReader();
 
-            var cmd = new SqlCommand(query, conn);
-            var reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-            {
+            while (t.Read())
                 TransactionList.Add(new Transaction
                 {
-                    TransactionId = (int)reader["TransactionId"],
-                    ClientName = reader["ClientName"].ToString(),
-                    WatchName = reader["WatchName"].ToString(),
-                    TransactionType = reader["TransactionType"].ToString(),
-                    TransactionDate = (DateTime)reader["TransactionDate"],
-                    PaymentStatus = reader["PaymentStatus"].ToString()
+                    TransactionId = SafeInt(t["TransactionId"]),
+                    ClientName = SafeString(t["ClientName"]),
+                    WatchName = SafeString(t["WatchName"]),
+                    TransactionType = SafeString(t["TransactionType"]),
+                    Quantity = SafeInt(t["Quantity"]),
+                    Price = SafeDecimal(t["Price"]),
+                    TransactionDate = t["TransactionDate"] == DBNull.Value
+                        ? DateTime.Now
+                        : Convert.ToDateTime(t["TransactionDate"])
                 });
-            }
         }
+
+        private void UpdateStock(SqlConnection conn, int watchId, int qty)
+        {
+            var cmd = new SqlCommand("UPDATE Watch SET stock = stock + @q WHERE watch_id=@id", conn);
+            cmd.Parameters.AddWithValue("@q", qty);
+            cmd.Parameters.AddWithValue("@id", watchId);
+            cmd.ExecuteNonQuery();
+        }
+
+        private int SafeInt(object v) => v == DBNull.Value ? 0 : Convert.ToInt32(v);
+        private decimal SafeDecimal(object v) => v == DBNull.Value ? 0 : Convert.ToDecimal(v);
+        private string SafeString(object v) => v == DBNull.Value ? "" : v.ToString();
     }
 }

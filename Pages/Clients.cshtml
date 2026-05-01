@@ -2,95 +2,186 @@
 @model Watch_Reselling_System___Franco.Pages.ClientsModel
 
 <style>
-    body {
-        font-family: 'Segoe UI';
-        background: #f1f5f9;
-        padding: 40px;
-    }
+body {
+    font-family: 'Segoe UI';
+    background: #f1f5f9;
+    padding: 40px;
+}
 
-    .container {
-        max-width: 900px;
-        margin: auto;
-    }
+.container {
+    max-width: 900px;
+    margin: auto;
+}
 
-    .card {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
+/* HEADER (TITLE + FILTER BUTTON) */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
 
-    input {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-    }
+/* CARD */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
 
-    button {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 8px;
-        background: #000000;
-        color: white;
-        cursor: pointer;
-    }
+/* INPUTS */
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+}
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-    }
+/* MAIN BUTTON */
+button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: black;
+    color: white;
+    cursor: pointer;
+}
 
-    th, td {
-        padding: 12px;
-        border-bottom: 1px solid #e2e8f0;
-    }
+/* FILTER BUTTON (MINIMAL) */
+.filter-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: #e2e8f0;
+    color: #0f172a;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    th {
-        background: #e2e8f0;
-    }
+.filter-btn:hover {
+    background: #cbd5e1;
+}
 
-    .action a {
-        margin-right: 10px;
-        text-decoration: none;
-        font-weight: bold;
-    }
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    .edit {
-        color: #000000;
-    }
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
 
-    .delete {
-        color: #000000;
-    }
+th {
+    background: #e2e8f0;
+}
+
+.action a {
+    margin-right: 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.edit { color: black; }
+.delete { color: black; }
 </style>
 
 <div class="container">
 
-    <h2>@(Model.IsEdit ? "Edit Client" : "Add Client")</h2>
+    <!-- 🔥 HEADER -->
+    <div class="header">
+        <h2>Clients</h2>
+        <button class="filter-btn" onclick="toggleFilter()">⚙</button>
+    </div>
 
+    <!-- 🔥 ADD / EDIT FORM -->
     <div class="card">
         <form method="post">
-            <input type="hidden" name="ClientId" value="@Model.Input.ClientId" />
 
-            <input name="FirstName" value="@Model.Input.FirstName" placeholder="First Name" required />
-            <input name="LastName" value="@Model.Input.LastName" placeholder="Last Name" required />
-            <input name="Email" value="@Model.Input.Email" placeholder="Email" required />
-            <input name="ContactNumber" value="@Model.Input.ContactNumber" placeholder="Contact Number" required />
+            <input type="hidden" name="Current.ClientId" value="@Model.Current.ClientId" />
 
-            <button>@(Model.IsEdit ? "Update Client" : "Add Client")</button>
+            <input type="text" name="Current.FirstName"
+                   value="@Model.Current.FirstName"
+                   placeholder="First Name" required />
+
+            <input type="text" name="Current.LastName"
+                   value="@Model.Current.LastName"
+                   placeholder="Last Name" required />
+
+            <input type="email" name="Current.Email"
+                   value="@Model.Current.Email"
+                   placeholder="Email" required />
+
+            <input type="text" name="Current.ContactNumber"
+                   value="@Model.Current.ContactNumber"
+                   placeholder="Contact Number" required />
+
+            <button>
+                @(Model.IsEdit ? "Update Client" : "Add Client")
+            </button>
+
         </form>
     </div>
 
-    <div class="card">
-        <h3>Client List</h3>
+    <!-- 🔍 FILTER PANEL -->
+    <div id="filterPanel" class="card" style="display:none;">
 
+        <form method="get">
+
+            <select name="SelectedClientId">
+                <option value="">Select Client</option>
+
+                @foreach (var c in Model.AllClients)
+                {
+                    <option value="@c.ClientId"
+                            selected="@(Model.SelectedClientId == c.ClientId ? "selected" : null)">
+                        @c.FirstName @c.LastName
+                    </option>
+                }
+            </select>
+
+            <button>Apply Filter</button>
+
+        </form>
+
+        @if (Model.SelectedClientId != null)
+        {
+            <p><b>Total Purchases:</b> @Model.TotalPurchases</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Watch</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                @foreach (var t in Model.PurchasedTransactions)
+                {
+                    <tr>
+                        <td>@t.WatchName</td>
+                        <td>@t.TransactionType</td>
+                        <td>@t.TransactionDate.ToShortDateString()</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+
+    </div>
+
+    <!-- 🔥 CLIENT TABLE -->
+    <div class="card">
         <table>
             <thead>
                 <tr>
@@ -98,30 +189,45 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Contact</th>
-                    <th>Action</th>
+                    <th></th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach (var c in Model.ClientList)
-                {
-                    <tr>
-                        <td>@c.ClientId</td>
-                        <td>@c.FirstName @c.LastName</td>
-                        <td>@c.Email</td>
-                        <td>@c.ContactNumber</td>
-                        <td class="action">
-                            <a class="edit" href="?EditId=@c.ClientId">Edit</a>
-                            <a class="delete"
-                               href="?DeleteId=@c.ClientId"
-                               onclick="return confirm('Delete this client?')">
-                                Delete
-                            </a>
-                        </td>
-                    </tr>
-                }
+            @foreach (var c in Model.ClientList)
+            {
+                <tr>
+                    <td>@c.ClientId</td>
+                    <td>@c.FirstName @c.LastName</td>
+                    <td>@c.Email</td>
+                    <td>@c.ContactNumber</td>
+                    <td class="action">
+                        <a class="edit" href="?EditId=@c.ClientId">Edit</a>
+                        <a class="delete"
+                           href="?DeleteId=@c.ClientId"
+                           onclick="return confirm('Delete?')">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
             </tbody>
         </table>
     </div>
 
 </div>
+
+<script>
+function toggleFilter() {
+    const panel = document.getElementById("filterPanel");
+    panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+
+// keep open after filter
+window.onload = function () {
+    const selected = "@Model.SelectedClientId";
+    if (selected) {
+        document.getElementById("filterPanel").style.display = "block";
+    }
+}
+</script>
