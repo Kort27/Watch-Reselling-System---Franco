@@ -50,7 +50,7 @@ namespace Watch_Reselling_System___Franco.Pages
                         qty = SafeInt(r["Quantity"]);
                         type = SafeString(r["TransactionType"]);
                     }
-                } // ✅ reader auto closed
+                } //  reader auto closed
 
                 // restore stock
                 if (type == "Sell") UpdateStock(conn, watchId, qty);
@@ -96,19 +96,19 @@ namespace Watch_Reselling_System___Franco.Pages
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-            // 🚫 STRICT VALIDATION
+            // STRICT VALIDATION
             if (Current.Quantity <= 0)
             {
                 TempData["Error"] = "Quantity must be greater than 0!";
                 return RedirectToPage("/Transaction");
             }
 
-            // 🔥 GET REAL PRICE
+            // GET REAL PRICE
             var priceCmd = new SqlCommand("SELECT price FROM Watch WHERE watch_id=@id", conn);
             priceCmd.Parameters.AddWithValue("@id", Current.WatchId);
             decimal realPrice = SafeDecimal(priceCmd.ExecuteScalar());
 
-            // 🔁 RESTORE OLD STOCK (EDIT)
+            // RESTORE OLD STOCK (EDIT)
             if (IsEdit)
             {
                 var old = new SqlCommand("SELECT * FROM Client_Transaction WHERE TransactionId=@id", conn);
@@ -128,7 +128,7 @@ namespace Watch_Reselling_System___Franco.Pages
                 }
             }
 
-            // 📦 STOCK LOGIC
+            // STOCK LOGIC
             if (Current.TransactionType == "Sell")
             {
                 var check = new SqlCommand("SELECT stock FROM Watch WHERE watch_id=@id", conn);
@@ -157,7 +157,7 @@ namespace Watch_Reselling_System___Franco.Pages
                 UpdateStock(conn, Current.WatchId, Current.Quantity);
             }
 
-            // 💾 SAVE
+            // SAVE
             if (IsEdit)
             {
                 var cmd = new SqlCommand(@"
