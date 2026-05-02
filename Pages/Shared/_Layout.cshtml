@@ -8,54 +8,73 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f1f5f9;
-            margin: 0;
-        }
+            body {
+                font-family: 'Segoe UI', sans-serif;
+                background: #f1f5f9;
+                margin: 0;
+            }
 
-        /* NAVBAR */
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 15px 40px;
-            border-bottom: 1px solid #e2e8f0;
-        }
+            /* MAIN WRAPPER */
+            .container-main {
+                max-width: 1100px;
+                margin: auto;
+                padding: 20px;
+            }
 
-        .logo {
-            font-weight: bold;
-            font-size: 20px;
-            color: #0f172a;
-        }
+            /* NAVBAR */
+            .navbar-custom {
+                max-width: 1100px;
+                margin: 20px auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: rgba(255,255,255,0.8);
+                backdrop-filter: blur(10px);
+                padding: 12px 20px;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            }
 
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-        }
+            /* LOGO */
+            .logo a {
+                font-weight: bold;
+                font-size: 18px;
+                color: #0f172a;
+                text-decoration: none;
+            }
 
-        .nav-btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            background: #000000;
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: 0.2s;
-        }
+            /* NAV BUTTONS */
+            .nav-links {
+                display: flex;
+                gap: 8px;
+            }
 
+            .nav-btn {
+                padding: 6px 14px;
+                border-radius: 8px;
+                font-size: 14px;
+                text-decoration: none;
+                background: #e2e8f0;
+                color: #0f172a;
+                transition: 0.2s;
+            }
 
-        /* MAIN CONTENT */
-        .main-container {
-            padding: 30px;
-        }
+                .nav-btn:hover {
+                    background: #cbd5e1;
+                }
 
-        footer {
-            text-align: center;
-            padding: 15px;
-            color: #64748b;
-        }
+            /* ACTIVE */
+            .active-nav {
+                background: black !important;
+                color: white !important;
+            }
+
+            /* FOOTER */
+            footer {
+                text-align: center;
+                padding: 20px;
+                color: #64748b;
+            }
     </style>
 </head>
 
@@ -63,27 +82,39 @@
 
     <!-- NAVBAR -->
     <header>
-        <div class="nav-container">
+        <div class="navbar-custom">
 
             <div class="logo">
-                
-                    <span class="icon">⌚</span>
-                    Watch Reselling System
-                
+                <a asp-page="/Index">⌚ Watch Reselling System</a>
             </div>
 
-            <div class="nav-buttons">
-                <a asp-page="/Index" class="nav-btn">Home</a>
-                <a asp-page="/Clients" class="nav-btn">Clients</a>
-                <a asp-page="/Watch" class="nav-btn">Watches</a>
-                <a asp-page="/Transaction" class="nav-btn">Transactions</a>
+            <div class="nav-links">
+                <a asp-page="/Index"
+                       class="nav-btn @(Context.Request.Path == "/" ? "active-nav" : "")">
+                    Home
+                </a>
+
+                <a asp-page="/Clients"
+                       class="nav-btn @(Context.Request.Path.StartsWithSegments("/Clients") ? "active-nav" : "")">
+                    Clients
+                </a>
+
+                <a asp-page="/Watch"
+                       class="nav-btn @(Context.Request.Path.StartsWithSegments("/Watch") ? "active-nav" : "")">
+                    Watches
+                </a>
+
+                <a asp-page="/Transaction"
+                       class="nav-btn @(Context.Request.Path.StartsWithSegments("/Transaction") ? "active-nav" : "")">
+                    Transactions
+                </a>
             </div>
 
         </div>
     </header>
 
-    <!-- MAIN -->
-    <div class="main-container">
+    <!-- MAIN CONTENT -->
+    <div class="container-main">
         @RenderBody()
     </div>
 
@@ -93,7 +124,7 @@
     </footer>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
