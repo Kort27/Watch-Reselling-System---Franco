@@ -33,10 +33,10 @@ namespace Watch_Reselling_System___Franco.Pages
             TotalWatches = (int)new SqlCommand("SELECT COUNT(*) FROM Watch", conn).ExecuteScalar();
             TotalTransactions = (int)new SqlCommand("SELECT COUNT(*) FROM Client_Transaction", conn).ExecuteScalar();
 
-            // 🔥 TOTAL STOCK
+            // TOTAL STOCK
             TotalStock = (int)new SqlCommand("SELECT ISNULL(SUM(stock),0) FROM Watch", conn).ExecuteScalar();
 
-            // 🔥 LOW STOCK (<=3)
+            // LOW STOCK (<=3)
             LowStockCount = (int)new SqlCommand("SELECT COUNT(*) FROM Watch WHERE stock <= 3", conn).ExecuteScalar();
         }
     }

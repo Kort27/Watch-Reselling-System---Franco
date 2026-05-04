@@ -26,14 +26,19 @@ namespace Watch_Reselling_System___Franco.Pages
         [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
         [BindProperty(SupportsGet = true)] public int? DeleteId { get; set; }
 
+        // 🔥 SEARCH FILTER
+        [BindProperty(SupportsGet = true)]
+        public int? SelectedClientId { get; set; }
+
         public bool IsEdit => EditId.HasValue;
 
+        // ========================= GET =========================
         public void OnGet()
         {
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-            // DELETE
+            // 🔥 DELETE
             if (DeleteId.HasValue)
             {
                 int watchId = 0, qty = 0;
@@ -50,7 +55,7 @@ namespace Watch_Reselling_System___Franco.Pages
                         qty = SafeInt(r["Quantity"]);
                         type = SafeString(r["TransactionType"]);
                     }
-                } //  reader auto closed
+                }
 
                 // restore stock
                 if (type == "Sell") UpdateStock(conn, watchId, qty);
@@ -65,7 +70,7 @@ namespace Watch_Reselling_System___Franco.Pages
                 return;
             }
 
-            // EDIT LOAD
+            // 🔥 EDIT LOAD
             if (EditId.HasValue)
             {
                 var cmd = new SqlCommand("SELECT * FROM Client_Transaction WHERE TransactionId=@id", conn);
@@ -91,26 +96,30 @@ namespace Watch_Reselling_System___Franco.Pages
             Load(conn);
         }
 
+        // ========================= POST =========================
         public IActionResult OnPost()
         {
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-            // STRICT VALIDATION
+            // 🔒 VALIDATION
             if (Current.Quantity <= 0)
             {
                 TempData["Error"] = "Quantity must be greater than 0!";
                 return RedirectToPage("/Transaction");
             }
 
-            // GET REAL PRICE
+            // 🔥 GET PRICE FROM WATCH TABLE
             var priceCmd = new SqlCommand("SELECT price FROM Watch WHERE watch_id=@id", conn);
             priceCmd.Parameters.AddWithValue("@id", Current.WatchId);
             decimal realPrice = SafeDecimal(priceCmd.ExecuteScalar());
 
-            // RESTORE OLD STOCK (EDIT)
+            // 🔥 RESTORE OLD STOCK (EDIT)
             if (IsEdit)
             {
+                int oldWatch = 0, oldQty = 0;
+                string oldType = "";
+
                 var old = new SqlCommand("SELECT * FROM Client_Transaction WHERE TransactionId=@id", conn);
                 old.Parameters.AddWithValue("@id", Current.TransactionId);
 
@@ -118,17 +127,17 @@ namespace Watch_Reselling_System___Franco.Pages
                 {
                     if (r.Read())
                     {
-                        int oldWatch = SafeInt(r["WatchId"]);
-                        int oldQty = SafeInt(r["Quantity"]);
-                        string oldType = SafeString(r["TransactionType"]);
-
-                        if (oldType == "Sell") UpdateStock(conn, oldWatch, oldQty);
-                        else if (oldType == "Buy") UpdateStock(conn, oldWatch, -oldQty);
+                        oldWatch = SafeInt(r["WatchId"]);
+                        oldQty = SafeInt(r["Quantity"]);
+                        oldType = SafeString(r["TransactionType"]);
                     }
                 }
+
+                if (oldType == "Sell") UpdateStock(conn, oldWatch, oldQty);
+                else if (oldType == "Buy") UpdateStock(conn, oldWatch, -oldQty);
             }
 
-            // STOCK LOGIC
+            // 🔥 STOCK LOGIC
             if (Current.TransactionType == "Sell")
             {
                 var check = new SqlCommand("SELECT stock FROM Watch WHERE watch_id=@id", conn);
@@ -148,16 +157,14 @@ namespace Watch_Reselling_System___Franco.Pages
                     return RedirectToPage("/Transaction");
                 }
 
-                // SELL → reduce stock
                 UpdateStock(conn, Current.WatchId, -Current.Quantity);
             }
-            else
+            else // BUY
             {
-                // BUY → increase stock
                 UpdateStock(conn, Current.WatchId, Current.Quantity);
             }
 
-            // SAVE
+            // 🔥 SAVE
             if (IsEdit)
             {
                 var cmd = new SqlCommand(@"
@@ -193,8 +200,14 @@ namespace Watch_Reselling_System___Franco.Pages
             return RedirectToPage("/Transaction");
         }
 
+        // ========================= LOAD =========================
         private void Load(SqlConnection conn)
         {
+            Clients.Clear();
+            Watches.Clear();
+            TransactionList.Clear();
+
+            // CLIENTS
             using (var c = new SqlCommand("SELECT * FROM Clients", conn).ExecuteReader())
             {
                 while (c.Read())
@@ -208,6 +221,7 @@ namespace Watch_Reselling_System___Franco.Pages
                 }
             }
 
+            // WATCHES
             using (var w = new SqlCommand("SELECT * FROM Watch", conn).ExecuteReader())
             {
                 while (w.Read())
@@ -222,6 +236,7 @@ namespace Watch_Reselling_System___Franco.Pages
                 }
             }
 
+            // 🔥 FILTERED TRANSACTIONS
             using (var t = new SqlCommand(@"
                 SELECT t.TransactionId,
                 c.FirstName + ' ' + c.LastName AS ClientName,
@@ -230,26 +245,33 @@ namespace Watch_Reselling_System___Franco.Pages
                 FROM Client_Transaction t
                 JOIN Clients c ON t.ClientId = c.ClientId
                 JOIN Watch w ON t.WatchId = w.watch_id
-                ORDER BY t.TransactionDate DESC", conn).ExecuteReader())
+                WHERE (@client IS NULL OR t.ClientId = @client)
+                ORDER BY t.TransactionDate DESC", conn))
             {
-                while (t.Read())
+                t.Parameters.AddWithValue("@client",
+                    SelectedClientId.HasValue ? SelectedClientId : (object)DBNull.Value);
+
+                using var reader = t.ExecuteReader();
+
+                while (reader.Read())
                 {
                     TransactionList.Add(new Transaction
                     {
-                        TransactionId = SafeInt(t["TransactionId"]),
-                        ClientName = SafeString(t["ClientName"]),
-                        WatchName = SafeString(t["WatchName"]),
-                        TransactionType = SafeString(t["TransactionType"]),
-                        Quantity = SafeInt(t["Quantity"]),
-                        Price = SafeDecimal(t["Price"]),
-                        TransactionDate = t["TransactionDate"] == DBNull.Value
+                        TransactionId = SafeInt(reader["TransactionId"]),
+                        ClientName = SafeString(reader["ClientName"]),
+                        WatchName = SafeString(reader["WatchName"]),
+                        TransactionType = SafeString(reader["TransactionType"]),
+                        Quantity = SafeInt(reader["Quantity"]),
+                        Price = SafeDecimal(reader["Price"]),
+                        TransactionDate = reader["TransactionDate"] == DBNull.Value
                             ? DateTime.Now
-                            : Convert.ToDateTime(t["TransactionDate"])
+                            : Convert.ToDateTime(reader["TransactionDate"])
                     });
                 }
             }
         }
 
+        // ========================= STOCK =========================
         private void UpdateStock(SqlConnection conn, int watchId, int qty)
         {
             var cmd = new SqlCommand(
@@ -260,6 +282,7 @@ namespace Watch_Reselling_System___Franco.Pages
             cmd.ExecuteNonQuery();
         }
 
+        // ========================= SAFE =========================
         private int SafeInt(object v) => v == DBNull.Value ? 0 : Convert.ToInt32(v);
         private decimal SafeDecimal(object v) => v == DBNull.Value ? 0 : Convert.ToDecimal(v);
         private string SafeString(object v) => v == DBNull.Value ? "" : v.ToString();
