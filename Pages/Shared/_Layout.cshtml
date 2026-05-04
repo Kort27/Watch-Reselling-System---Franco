@@ -8,42 +8,46 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
     <style>
+            /* ===== GLOBAL BACKGROUND ===== */
             body {
                 font-family: 'Segoe UI', sans-serif;
-                background: #f1f5f9;
                 margin: 0;
+                padding: 0;
+                background: url('/watch.jpg') no-repeat center center fixed;
+                background-size: cover;
             }
 
-            /* MAIN WRAPPER */
-            .container-main {
-                max-width: 1100px;
-                margin: auto;
-                padding: 20px;
-            }
+                /* DARK OVERLAY */
+                body::before {
+                    content: "";
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0,0,0,0.55);
+                    z-index: -1;
+                }
 
-            /* NAVBAR */
+            /* ===== NAVBAR ===== */
             .navbar-custom {
                 max-width: 1100px;
                 margin: 20px auto;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background: rgba(255,255,255,0.8);
-                backdrop-filter: blur(10px);
                 padding: 12px 20px;
+                background: rgba(255,255,255,0.1);
+                backdrop-filter: blur(12px);
                 border-radius: 12px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+                box-shadow: 0 5px 20px rgba(0,0,0,0.4);
             }
 
-            /* LOGO */
             .logo a {
+                color: white;
                 font-weight: bold;
                 font-size: 18px;
-                color: #0f172a;
                 text-decoration: none;
             }
 
-            /* NAV BUTTONS */
+            /* NAV LINKS */
             .nav-links {
                 display: flex;
                 gap: 8px;
@@ -52,28 +56,94 @@
             .nav-btn {
                 padding: 6px 14px;
                 border-radius: 8px;
-                font-size: 14px;
                 text-decoration: none;
-                background: #e2e8f0;
-                color: #0f172a;
+                font-size: 14px;
+                background: rgba(255,255,255,0.2);
+                color: white;
                 transition: 0.2s;
             }
 
                 .nav-btn:hover {
-                    background: #cbd5e1;
+                    background: rgba(255,255,255,0.35);
                 }
 
-            /* ACTIVE */
             .active-nav {
-                background: black !important;
-                color: white !important;
+                background: white !important;
+                color: black !important;
+                font-weight: bold;
             }
 
-            /* FOOTER */
+            /* ===== MAIN CONTENT ===== */
+            .container-main {
+                max-width: 1100px;
+                margin: auto;
+                padding: 20px;
+            }
+
+            /* ===== CARD GLOBAL ===== */
+            .card {
+                background: rgba(255,255,255,0.12);
+                backdrop-filter: blur(12px);
+                padding: 20px;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                color: white;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            }
+
+            /* ===== INPUTS ===== */
+            input, select {
+                width: 100%;
+                padding: 10px;
+                margin: 8px 0;
+                border-radius: 8px;
+                border: none;
+                background: rgba(255,255,255,0.2);
+                color: white;
+            }
+
+                input::placeholder {
+                    color: #ddd;
+                }
+
+            /* ===== BUTTON ===== */
+            button {
+                width: 100%;
+                padding: 10px;
+                border: none;
+                border-radius: 8px;
+                background: white;
+                color: black;
+                font-weight: bold;
+            }
+
+            /* ===== TABLE ===== */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                color: white;
+            }
+
+            th {
+                background: rgba(255,255,255,0.15);
+            }
+
+            td {
+                border-bottom: 1px solid rgba(255,255,255,0.2);
+                padding: 10px;
+            }
+
+            .action a {
+                margin-right: 10px;
+                color: white;
+                font-weight: bold;
+            }
+
+            /* ===== FOOTER ===== */
             footer {
                 text-align: center;
                 padding: 20px;
-                color: #64748b;
+                color: #cbd5e1;
             }
     </style>
 </head>
@@ -113,7 +183,7 @@
         </div>
     </header>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN -->
     <div class="container-main">
         @RenderBody()
     </div>
@@ -122,9 +192,6 @@
     <footer>
         &copy; 2026 - Watch Reselling System
     </footer>
-
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

@@ -2,99 +2,185 @@
 @model Watch_Reselling_System___Franco.Pages.IndexModel
 
 <style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background: #f1f5f9;
-        padding: 40px;
-    }
+/* ===== BODY BACKGROUND ===== */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 40px;
 
-    .container {
-        max-width: 1000px;
-        margin: auto;
-    }
+    background: url('/watch.jpg') no-repeat center center fixed;
+    background-size: cover;
+}
 
-    .header {
-        margin-bottom: 30px;
-    }
+/* DARK OVERLAY */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+        rgba(0,0,0,0.6),
+        rgba(0,0,0,0.4)
+    );
+    z-index: -1;
+}
 
-    .cards {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
+/* ===== CONTAINER ===== */
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
 
-    .card {
-        flex: 1;
-        min-width: 250px;
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        text-decoration: none;
-        color: black;
-        box-shadow: 0 6px 15px rgba(0,0,0,0.05);
-        transition: 0.2s;
-    }
+/* ===== HEADER ===== */
+.header {
+    margin-bottom: 35px;
+    color: white;
+}
 
-        .card:hover {
-            transform: translateY(-5px);
-        }
+.header h1 {
+    font-size: 34px;
+    margin: 0;
+    font-weight: bold;
+}
 
-        .card h2 {
-            margin-bottom: 10px;
-        }
+.header p {
+    opacity: 0.8;
+    margin-top: 6px;
+}
 
-        .card p {
-            color: #64748b;
-        }
+/* ===== GRID ===== */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
 
-    .count {
-        font-size: 28px;
-        font-weight: bold;
-        margin-top: 10px;
-    }
+/* ===== CARD ===== */
+.card {
+    position: relative;
+    overflow: hidden;
+
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(12px);
+
+    padding: 25px;
+    border-radius: 16px;
+
+    text-decoration: none;
+    color: white;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+
+    transition: all 0.3s ease;
+}
+
+/* GLOW EFFECT */
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+/* HOVER */
+.card:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+/* TITLE */
+.card h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+/* SUBTEXT */
+.card p {
+    color: #cbd5e1;
+    font-size: 14px;
+}
+
+/* COUNT */
+.count {
+    font-size: 34px;
+    font-weight: bold;
+    margin-top: 12px;
+}
+
+/* COLORS */
+.green { color: #4ade80; }
+.red { color: #f87171; }
+
+/* LOW STOCK WARNING */
+.warning {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #f87171;
+}
+
+/* ICON STYLE */
+.icon {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+/* FOOTER SPACING */
+.spacer {
+    height: 20px;
+}
 </style>
 
 <div class="container">
 
+    <!-- HEADER -->
     <div class="header">
         <h1>Dashboard</h1>
-        <p>Watch Reselling System</p>
+        <p>Watch Reselling System Overview</p>
     </div>
 
+    <!-- CARDS -->
     <div class="cards">
 
         <!-- CLIENTS -->
         <a asp-page="/Clients" class="card">
-            <h2>👤 Clients</h2>
-            <p>Total Clients</p>
+            <div class="icon">👤</div>
+            <h2>Clients</h2>
+            <p>Total registered clients</p>
             <div class="count">@Model.TotalClients</div>
         </a>
 
-        <!-- WATCHES (STOCK VERSION) -->
+        <!-- WATCHES -->
         <a asp-page="/Watch" class="card">
-            <h2>⌚ Watches</h2>
-            <p>Total Stock Available</p>
+            <div class="icon">⌚</div>
+            <h2>Inventory</h2>
+            <p>Total stock available</p>
 
-            <div class="count"
-                 style="color:@(Model.TotalStock == 0 ? "red" : "green")">
-                @Model.TotalStock
+            <div class="count @(Model.TotalStock == 0 ? "red" : "green")">
+                @Model.TotalStock 
             </div>
 
             @if (Model.LowStockCount > 0)
             {
-                <div style="color:red;font-size:12px;margin-top:5px;">
-                    @Model.LowStockCount Low/No Stock
+                <div class="warning">
+                    @Model.LowStockCount items low / out of stock
                 </div>
             }
         </a>
 
         <!-- TRANSACTIONS -->
         <a asp-page="/Transaction" class="card">
-            <h2>💳 Transactions</h2>
-            <p>Total Transactions</p>
+            <div class="icon">💳</div>
+            <h2>Transactions</h2>
+            <p>Total transactions recorded</p>
             <div class="count">@Model.TotalTransactions</div>
         </a>
 
     </div>
+
+    <div class="spacer"></div>
 
 </div>

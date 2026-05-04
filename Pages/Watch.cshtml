@@ -4,21 +4,58 @@
 <style>
     body {
         font-family: 'Segoe UI';
-        background: #f1f5f9;
+        margin: 0;
         padding: 40px;
+        background: url('/watch.jpg') no-repeat center center fixed;
+        background-size: cover;
     }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: -1;
+        }
 
     .container {
         max-width: 900px;
         margin: auto;
     }
 
+    /* HEADER */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        color: white;
+    }
+
+    /* FLOAT SEARCH BUTTON */
+    .search-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: none;
+        background: rgba(255,255,255,0.85);
+        color: black;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    /* CARD */
     .card {
-        background: white;
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(12px);
         padding: 20px;
         border-radius: 12px;
         margin-bottom: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        color: white;
     }
 
     input, select {
@@ -26,46 +63,79 @@
         padding: 10px;
         margin: 8px 0;
         border-radius: 8px;
-        border: 1px solid #cbd5e1;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        color: white;
     }
 
     button {
         width: 100%;
         padding: 10px;
-        border: none;
         border-radius: 8px;
-        background: #000000;
-        color: white;
+        background: white;
+        color: black;
+        font-weight: bold;
     }
 
+    /* TABLE */
     table {
         width: 100%;
         border-collapse: collapse;
-        background: white;
-    }
-
-    th, td {
-        padding: 12px;
-        border-bottom: 1px solid #e2e8f0;
+        color: white;
     }
 
     th {
-        background: #e2e8f0;
+        background: rgba(255,255,255,0.15);
+    }
+
+    td {
+        border-bottom: 1px solid rgba(255,255,255,0.2);
     }
 
     .action a {
         margin-right: 10px;
-        text-decoration: none;
         font-weight: bold;
+        color: white;
     }
 
-    .edit {
-        color: #000000;
+    /* 🔥 SLIDE SEARCH PANEL */
+    .search-panel {
+        position: fixed;
+        top: 0;
+        right: -300px;
+        width: 280px;
+        height: 100%;
+        padding: 20px;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(15px);
+        transition: 0.3s;
     }
 
-    .delete {
-        color: #000000;
+        .search-panel.active {
+            right: 0;
+        }
+
+    .close-btn {
+        cursor: pointer;
+        float: right;
     }
+
+    /* 🔥 ADD THIS BELOW */
+    select {
+        background: rgba(255,255,255,0.25);
+        color: white;
+        border: none;
+        backdrop-filter: blur(8px);
+    }
+
+        select option {
+            background: #1e293b;
+            color: white;
+        }
+
+            select option:hover {
+                background: #334155;
+            }
 </style>
 
 <div class="container">
@@ -73,8 +143,25 @@
     <!-- HEADER -->
     <div class="header">
         <h2>Watch Inventory</h2>
+
+        <!-- SEARCH BUTTON -->
+        <button class="search-btn" onclick="toggleSearch()">☰</button>
     </div>
 
+    <!-- 🔍 SEARCH PANEL -->
+    <div id="searchPanel" class="search-panel">
+
+        <span class="close-btn" onclick="toggleSearch()">✖</span>
+        <h4>Search Watch</h4>
+
+        <form method="get">
+            <input type="text" name="SearchTerm" placeholder="Enter model..." value="@Model.SearchTerm" />
+            <button>Search</button>
+        </form>
+
+    </div>
+
+    <!-- FORM -->
     <div class="card">
         <form method="post">
             <input type="hidden" name="watch_id" value="@Model.Current.watch_id" />
@@ -98,6 +185,7 @@
         </form>
     </div>
 
+    <!-- TABLE -->
     <div class="card">
         <table>
             <thead>
@@ -121,8 +209,8 @@
                         <td>@w.stock</td>
                         <td>₱@w.price</td>
                         <td class="action">
-                            <a class="edit" href="?EditId=@w.watch_id">Edit</a>
-                            <a class="delete" href="?DeleteId=@w.watch_id"
+                            <a href="?EditId=@w.watch_id">Edit</a>
+                            <a href="?DeleteId=@w.watch_id"
                                onclick="return confirm('Delete?')">Delete</a>
                         </td>
                     </tr>
@@ -132,3 +220,9 @@
     </div>
 
 </div>
+
+<script>
+    function toggleSearch() {
+        document.getElementById("searchPanel").classList.toggle("active");
+    }
+</script>

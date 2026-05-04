@@ -1,229 +1,112 @@
 ﻿@page
 @model Watch_Reselling_System___Franco.Pages.TransactionModel
 
-<style>
-body {
-    font-family: 'Segoe UI';
-    background: #f1f5f9;
-    padding: 30px;
-}
+<!-- HEADER -->
+<div class="header">
+    <h2>Transactions</h2>
 
-.container {
-    max-width: 1100px;
-    margin: auto;
-}
+    <!-- FILTER BUTTON (☰ ICON) -->
+    <button class="search-btn" onclick="toggleSearch()">☰</button>
+</div>
 
-/* HEADER */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
+<!-- 🔍 SEARCH PANEL -->
+<div id="searchPanel" class="search-panel">
 
-/* FILTER BUTTON */
-.filter-toggle {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    border: none;
-    background: #e2e8f0;
-    cursor: pointer;
-}
-
-/* CARD */
-.card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-/* INPUT */
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-}
-
-/* BUTTON */
-.main-btn {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    background: black;
-    color: white;
-}
-
-/* TABLE */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 12px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-th {
-    background: #e2e8f0;
-}
-
-.action a {
-    margin-right: 10px;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-.edit { color: black; }
-.delete { color: red; }
-
-.error {
-    color: red;
-    margin-bottom: 10px;
-}
-
-/* 🔥 SLIDER PANEL */
-.filter-panel {
-    position: fixed;
-    top: 0;
-    right: -300px;
-    width: 280px;
-    height: 100%;
-    background: white;
-    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
-    padding: 20px;
-    transition: 0.3s;
-    z-index: 1000;
-}
-
-.filter-panel.active {
-    right: 0;
-}
-
-.filter-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.close-btn {
-    cursor: pointer;
-}
-</style>
-
-<div class="container">
-
-    <!-- HEADER -->
-    <div class="header">
-        <h2>Transactions</h2>
-        <button class="filter-toggle" onclick="toggleFilter()">⚙</button>
+    <div class="panel-header">
+        <h4>Search</h4>
+        <span class="close-btn" onclick="toggleSearch()">✖</span>
     </div>
 
-    <!-- ERROR -->
-    @if (TempData["Error"] != null)
-    {
-        <div class="error">@TempData["Error"]</div>
-    }
+    <form method="get">
+        <select name="SelectedClientId">
+            <option value="">Select Client</option>
 
-    <!-- 🔥 SLIDER FILTER -->
-    <div id="filterPanel" class="filter-panel">
+            @foreach (var c in Model.Clients)
+            {
+                <option value="@c.ClientId">
+                    @c.FirstName @c.LastName
+                </option>
+            }
+        </select>
 
-        <div class="filter-header">
-            <strong>Filter</strong>
-            <span class="close-btn" onclick="toggleFilter()">✖</span>
-        </div>
+        <button>Apply</button>
+    </form>
 
-        <form method="get">
+</div>
 
-            <select name="SelectedClientId">
-                <option value="">All Clients</option>
+<!-- FORM -->
+<div class="card">
+    <form method="post">
 
-                @foreach (var c in Model.Clients)
-                {
-                    <option value="@c.ClientId"
-                        selected="@(Model.SelectedClientId == c.ClientId ? "selected" : null)">
-                        @c.FirstName @c.LastName
-                    </option>
-                }
-            </select>
+        <input type="hidden" name="Current.TransactionId" value="@Model.Current.TransactionId" />
 
-            <button class="main-btn">Apply</button>
-
-        </form>
-    </div>
-
-    <!-- FORM -->
-    <div class="card">
-        <form method="post">
-
-            <input type="hidden" name="Current.TransactionId" value="@Model.Current.TransactionId" />
-
-            <!-- CLIENT -->
-            <select name="Current.ClientId" required>
-                @foreach (var c in Model.Clients)
-                {
-                    <option value="@c.ClientId"
+        <!-- CLIENT -->
+        <select name="Current.ClientId" required>
+            @foreach (var c in Model.Clients)
+            {
+                <option value="@c.ClientId"
                         selected="@(Model.Current.ClientId == c.ClientId ? "selected" : null)">
-                        @c.FirstName @c.LastName
-                    </option>
-                }
-            </select>
+                    @c.FirstName @c.LastName
+                </option>
+            }
+        </select>
 
-            <!-- WATCH -->
-            <select id="watchSelect" name="Current.WatchId" required>
-                @foreach (var w in Model.Watches)
-                {
-                    <option value="@w.watch_id"
-                            data-price="@w.price"
-                            disabled="@(w.stock <= 0 ? "disabled" : null)"
-                            selected="@(Model.Current.WatchId == w.watch_id ? "selected" : null)">
-                        @w.watch_modelname (₱@w.price | Stock:@w.stock)
-                    </option>
-                }
-            </select>
+        <!-- WATCH -->
+        <select id="watchSelect" name="Current.WatchId" required>
+            @foreach (var w in Model.Watches)
+            {
+                <option value="@w.watch_id"
+                        data-price="@w.price"
+                        selected="@(Model.Current.WatchId == w.watch_id ? "selected" : null)">
+                    @w.watch_modelname (₱@w.price | Stock:@w.stock)
+                </option>
+            }
+        </select>
 
-            <!-- TYPE -->
-            <select name="Current.TransactionType">
-                <option value="Sell">Sell (to client)</option>
-                <option value="Buy">Buy (from client)</option>
-            </select>
+        <!-- TYPE -->
+        <select name="Current.TransactionType">
+            <option value="Sell" selected="@(Model.Current.TransactionType == "Sell" ? "selected" : null)">Sell</option>
+            <option value="Buy" selected="@(Model.Current.TransactionType == "Buy" ? "selected" : null)">Buy</option>
+        </select>
 
-            <!-- PRICE -->
-            <input id="priceInput" readonly placeholder="Price" />
+        <!-- PRICE -->
+        <input id="priceInput"
+               name="Current.Price"
+               value="@Model.Current.Price"
+               placeholder="Price" required />
 
-            <!-- QUANTITY -->
-            <input type="number" name="Current.Quantity" min="1" required placeholder="Quantity" />
+        <!-- QUANTITY -->
+        <input type="number"
+               name="Current.Quantity"
+               value="@Model.Current.Quantity"
+               min="1"
+               placeholder="Quantity"
+               required />
 
-            <button class="main-btn">
-                @(Model.IsEdit ? "Update Transaction" : "Add Transaction")
-            </button>
+        <button>
+            @(Model.IsEdit ? "Update Transaction" : "Add Transaction")
+        </button>
 
-        </form>
-    </div>
+    </form>
+</div>
 
-    <!-- TABLE -->
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Client</th>
-                    <th>Watch</th>
-                    <th>Type</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                    <th>Date</th>
-                    <th></th>
-                </tr>
-            </thead>
+<!-- TABLE -->
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Watch</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Date</th>
+                <th></th>
+            </tr>
+        </thead>
 
-            <tbody>
+        <tbody>
             @foreach (var t in Model.TransactionList)
             {
                 <tr>
@@ -234,43 +117,191 @@ th {
                     <td>₱@t.Price</td>
                     <td>₱@(t.Price * t.Quantity)</td>
                     <td>@t.TransactionDate.ToShortDateString()</td>
-                    <td class="action">
-                        <a class="edit" href="?EditId=@t.TransactionId">Edit</a>
-                        <a class="delete"
-                           href="?DeleteId=@t.TransactionId"
+                    <td>
+                        <a class="action-link" href="?EditId=@t.TransactionId">Edit</a>
+                        <a class="action-link" href="?DeleteId=@t.TransactionId"
                            onclick="return confirm('Delete?')">Delete</a>
                     </td>
                 </tr>
             }
-            </tbody>
-        </table>
-    </div>
-
+        </tbody>
+    </table>
 </div>
 
-<!-- JS -->
-<script>
-const watchSelect = document.getElementById("watchSelect");
-const priceInput = document.getElementById("priceInput");
+<!-- STYLE -->
+<style>
 
-function updatePrice() {
-    const selected = watchSelect.options[watchSelect.selectedIndex];
-    priceInput.value = selected.getAttribute("data-price") || 0;
-}
-
-watchSelect.addEventListener("change", updatePrice);
-
-function toggleFilter() {
-    document.getElementById("filterPanel").classList.toggle("active");
-}
-
-// KEEP PANEL OPEN AFTER FILTER
-window.onload = function () {
-    updatePrice();
-
-    const selected = "@Model.SelectedClientId";
-    if (selected) {
-        document.getElementById("filterPanel").classList.add("active");
+    /* BACKGROUND */
+    body {
+        margin: 0;
+        padding: 40px;
+        font-family: 'Segoe UI', sans-serif;
+        background: url('/watch.jpg') no-repeat center center fixed;
+        background-size: cover;
     }
-}
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: -1;
+        }
+
+    /* HEADER */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        margin-bottom: 20px;
+    }
+
+    /* FILTER BUTTON */
+    .search-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: none;
+        background: rgba(255,255,255,0.9);
+        color: black;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        transition: 0.25s;
+    }
+
+        .search-btn:hover {
+            transform: scale(1.1);
+        }
+
+    /* PANEL */
+    .search-panel {
+        position: fixed;
+        top: 0;
+        right: -300px;
+        width: 280px;
+        height: 100%;
+        padding: 20px;
+        background: rgba(15,23,42,0.95);
+        backdrop-filter: blur(12px);
+        transition: 0.3s ease;
+        z-index: 1000;
+    }
+
+        .search-panel.active {
+            right: 0;
+        }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        color: white;
+        margin-bottom: 15px;
+    }
+
+    .close-btn {
+        cursor: pointer;
+    }
+
+    /* CARD */
+    .card {
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(12px);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    /* INPUTS */
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+
+        /* SELECT DARK */
+        select option {
+            background: #1e293b;
+            color: white;
+        }
+
+    /* BUTTON */
+    button {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        background: white;
+        color: black;
+        font-weight: bold;
+    }
+
+    /* TABLE */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: rgba(255,255,255,0.15);
+    }
+
+    td, th {
+        padding: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* ACTION LINKS (WHITE) */
+    .action-link {
+        color: white;
+        text-decoration: none;
+        margin-right: 10px;
+        font-weight: 500;
+    }
+
+        .action-link:hover {
+            color: #e2e8f0;
+        }
+
+</style>
+
+<!-- SCRIPT -->
+<script>
+    function toggleSearch() {
+        document.getElementById("searchPanel").classList.toggle("active");
+    }
+
+    /* PRICE LOGIC */
+    const watchSelect = document.getElementById("watchSelect");
+    const priceInput = document.getElementById("priceInput");
+    const typeSelect = document.querySelector("[name='Current.TransactionType']");
+
+    function updatePriceBehavior() {
+        const selected = watchSelect.options[watchSelect.selectedIndex];
+        const price = selected.getAttribute("data-price") || 0;
+
+        if (typeSelect.value === "Sell") {
+            priceInput.value = price;
+            priceInput.readOnly = true;
+        } else {
+            priceInput.readOnly = false;
+
+            if (!priceInput.value || priceInput.value == "0") {
+                priceInput.value = price;
+            }
+        }
+    }
+
+    watchSelect.addEventListener("change", updatePriceBehavior);
+    typeSelect.addEventListener("change", updatePriceBehavior);
+    window.onload = updatePriceBehavior;
 </script>

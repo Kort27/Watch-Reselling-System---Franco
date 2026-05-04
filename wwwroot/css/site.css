@@ -29,3 +29,48 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* ===== DARK SELECT (GLASS UI) ===== */
+select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    backdrop-filter: blur(10px);
+}
+
+    /* DROPDOWN LIST */
+    select option {
+        background: #0f172a !important; /* dark navy */
+        color: #ffffff !important;
+    }
+
+        /* HOVER */
+        select option:hover {
+            background: #1e293b !important;
+        }
+
+
+/* FLOAT SEARCH BUTTON (ALL PAGES) */
+.search-btn, .filter-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: none;
+    background: rgba(255,255,255,0.9);
+    color: black;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    transition: 0.2s;
+}
+
+    .search-btn:hover,
+    .filter-btn:hover {
+        transform: scale(1.1);
+    }
