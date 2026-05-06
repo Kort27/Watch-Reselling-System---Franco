@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
@@ -21,15 +21,15 @@ namespace Watch_Reselling_System___Franco.Pages
         [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
         [BindProperty(SupportsGet = true)] public int? DeleteId { get; set; }
 
-        // 🔥 Capture the client selection from the sidebar search seen in image_afa8d2.png
+        
         [BindProperty(SupportsGet = true)] public int? FilterClientId { get; set; }
 
         public bool IsEdit => EditId.HasValue;
 
-        // ========================= GET =========================
+        
         public void OnGet()
         {
-            // Handle Delete separately to avoid connection/reader conflicts seen in image_b0216c.png
+            
             if (DeleteId.HasValue)
             {
                 DeleteTransaction(DeleteId.Value);
@@ -46,7 +46,7 @@ namespace Watch_Reselling_System___Franco.Pages
             LoadData();
         }
 
-        // ========================= POST =========================
+        
         public IActionResult OnPost()
         {
             if (Current.Quantity <= 0)
@@ -61,7 +61,7 @@ namespace Watch_Reselling_System___Franco.Pages
 
             decimal finalPrice = 0;
 
-            // STOCK CHECK logic to prevent negative stock seen in image_b03b3b.png
+            // STOCK CHECK 
             if (Current.TransactionType == "Sell")
             {
                 var checkCmd = new SqlCommand("SELECT price, stock FROM Watch WHERE watch_id=@id", conn);
@@ -113,7 +113,7 @@ namespace Watch_Reselling_System___Franco.Pages
 
         private void LoadData()
         {
-            // Fresh connection per load to fix reader errors in image_b0216c_2.png
+            // Fresh connection per load to fix reader errors 
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
@@ -136,7 +136,7 @@ namespace Watch_Reselling_System___Franco.Pages
             }
 
             TransactionList.Clear();
-            // Filter logic using the Sidebar selection from image_afa8d2.png
+            // Filter logic using the Sidebar selection 
             string sql = @"
                 SELECT t.*, c.FirstName + ' ' + c.LastName AS ClientName, w.watch_modelname AS WatchName
                 FROM Client_Transaction t
