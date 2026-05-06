@@ -21,7 +21,7 @@ namespace Watch_Reselling_System___Franco.Pages
         public List<Clients> AllClients { get; set; } = new();
         public List<Transaction> PurchasedTransactions { get; set; } = new();
 
-        // 🔥 REQUIRED FOR FORM BINDING
+        
         [BindProperty]
         public Clients Current { get; set; } = new();
 
