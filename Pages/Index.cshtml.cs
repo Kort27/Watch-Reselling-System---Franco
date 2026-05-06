@@ -12,7 +12,7 @@ namespace Watch_Reselling_System___Franco.Pages
         public int TotalWatches { get; set; }
         public int TotalTransactions { get; set; }
 
-        // 🔥 STOCK DATA
+        // STOCK DATA
         public int TotalStock { get; set; }
         public int LowStockCount { get; set; }
 
