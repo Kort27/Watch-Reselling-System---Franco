@@ -1,37 +1,56 @@
 ﻿@page
 @model Watch_Reselling_System___Franco.Pages.TransactionModel
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid #ff3b30; backdrop-filter: blur(10px); border-radius: 10px; margin-bottom: 20px; padding: 15px;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong></strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         style="background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid #34c759; backdrop-filter: blur(10px); border-radius: 10px; margin-bottom: 20px; padding: 15px;">
+        <i class="bi bi-check-circle-fill"></i>
+        <strong>Success:</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <!-- HEADER -->
 <div class="header">
     <h2>Transactions</h2>
 
-    <!-- FILTER BUTTON (☰ ICON) -->
+
+
+    <!-- FILTER BUTTON -->
     <button class="search-btn" onclick="toggleSearch()">☰</button>
 </div>
 
-<!-- 🔍 SEARCH PANEL -->
+<!-- SEARCH PANEL -->
 <div id="searchPanel" class="search-panel">
-
     <div class="panel-header">
         <h4>Search</h4>
         <span class="close-btn" onclick="toggleSearch()">✖</span>
     </div>
 
+    <!-- UPDATED FILTER FORM -->
     <form method="get">
-        <select name="SelectedClientId">
-            <option value="">Select Client</option>
-
+        <select name="FilterClientId" onchange="this.form.submit()">
+            <option value="">All Clients</option>
             @foreach (var c in Model.Clients)
             {
-                <option value="@c.ClientId">
+                <!option value="@c.ClientId" @(Model.FilterClientId == c.ClientId ? "selected" : "")>
                     @c.FirstName @c.LastName
-                </option>
+                </!option>
             }
         </select>
-
-        <button>Apply</button>
+        <a href="/Transaction" class="action-link" style="display:block; text-align:center; margin-top:10px;">Clear Filter</a>
     </form>
-
 </div>
 
 <!-- FORM -->
@@ -66,7 +85,7 @@
         <!-- TYPE -->
         <select name="Current.TransactionType">
             <option value="Sell" selected="@(Model.Current.TransactionType == "Sell" ? "selected" : null)">Sell</option>
-            <option value="Buy" selected="@(Model.Current.TransactionType == "Buy" ? "selected" : null)">Buy</option>
+            <option value="Buy" selected="@(Model.Current.TransactionType == "Buy" ? "selected" : null)">Buy (Brand New)</option>
         </select>
 
         <!-- PRICE -->
@@ -95,6 +114,7 @@
     <table>
         <thead>
             <tr>
+                <th>Transaction ID</th>
                 <th>Client</th>
                 <th>Watch</th>
                 <th>Type</th>
@@ -110,6 +130,7 @@
             @foreach (var t in Model.TransactionList)
             {
                 <tr>
+                    <td>@t.TransactionId</td>
                     <td>@t.ClientName</td>
                     <td>@t.WatchName</td>
                     <td>@t.TransactionType</td>
@@ -284,7 +305,7 @@
     const watchSelect = document.getElementById("watchSelect");
     const priceInput = document.getElementById("priceInput");
     const typeSelect = document.querySelector("[name='Current.TransactionType']");
-
+        
     function updatePriceBehavior() {
         const selected = watchSelect.options[watchSelect.selectedIndex];
         const price = selected.getAttribute("data-price") || 0;

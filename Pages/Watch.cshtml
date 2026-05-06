@@ -1,191 +1,77 @@
 ﻿@page
 @model Watch_Reselling_System___Franco.Pages.WatchModel
 
-<style>
-    body {
-        font-family: 'Segoe UI';
-        margin: 0;
-        padding: 40px;
-        background: url('/watch.jpg') no-repeat center center fixed;
-        background-size: cover;
-    }
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" 
+         style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid #ff3b30; backdrop-filter: blur(10px); border-radius: 10px; margin-bottom: 20px; padding: 15px;">
+        <i class="bi bi-exclamation-triangle-fill"></i> 
+        <strong></strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.55);
-            z-index: -1;
-        }
-
-    .container {
-        max-width: 900px;
-        margin: auto;
-    }
-
-    /* HEADER */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        margin-bottom: 20px;
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        color: white;
-    }
-
-    /* FLOAT SEARCH BUTTON */
-    .search-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        border: none;
-        background: rgba(255,255,255,0.85);
-        color: black;
-        font-size: 18px;
-        cursor: pointer;
-    }
-
-    /* CARD */
-    .card {
-        background: rgba(255,255,255,0.12);
-        backdrop-filter: blur(12px);
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        color: white;
-    }
-
-    input, select {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 8px;
-        border: none;
-        background: rgba(255,255,255,0.2);
-        color: white;
-    }
-
-    button {
-        width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        background: white;
-        color: black;
-        font-weight: bold;
-    }
-
-    /* TABLE */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        color: white;
-    }
-
-    th {
-        background: rgba(255,255,255,0.15);
-    }
-
-    td {
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .action a {
-        margin-right: 10px;
-        font-weight: bold;
-        color: white;
-    }
-
-    /* 🔥 SLIDE SEARCH PANEL */
-    .search-panel {
-        position: fixed;
-        top: 0;
-        right: -300px;
-        width: 280px;
-        height: 100%;
-        padding: 20px;
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(15px);
-        transition: 0.3s;
-    }
-
-        .search-panel.active {
-            right: 0;
-        }
-
-    .close-btn {
-        cursor: pointer;
-        float: right;
-    }
-
-    /* 🔥 ADD THIS BELOW */
-    select {
-        background: rgba(255,255,255,0.25);
-        color: white;
-        border: none;
-        backdrop-filter: blur(8px);
-    }
-
-        select option {
-            background: #1e293b;
-            color: white;
-        }
-
-            select option:hover {
-                background: #334155;
-            }
-</style>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         style="background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid #34c759; backdrop-filter: blur(10px); border-radius: 10px; margin-bottom: 20px; padding: 15px;">
+        <i class="bi bi-check-circle-fill"></i> 
+        <strong>Success:</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <div class="container">
-
     <!-- HEADER -->
     <div class="header">
         <h2>Watch Inventory</h2>
 
-        <!-- SEARCH BUTTON -->
+                    @if (TempData["Error"] != null)
+{
+    <div style="background: rgba(255, 0, 0, 0.2); color: #ff8888; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(255, 0, 0, 0.3); backdrop-filter: blur(10px);">
+        <b>⚠️ Warning:</b> @TempData["Error"]
+    </div>
+}
+
+
+
+
+        <!-- SEARCH BUTTON  -->
         <button class="search-btn" onclick="toggleSearch()">☰</button>
     </div>
 
-    <!-- 🔍 SEARCH PANEL -->
+    <!-- 🔍 SEARCH PANEL (TRANSACTION STYLE) -->
     <div id="searchPanel" class="search-panel">
-
-        <span class="close-btn" onclick="toggleSearch()">✖</span>
-        <h4>Search Watch</h4>
+        <div class="panel-header">
+            <h4>Search Watch</h4>
+            <span class="close-btn" onclick="toggleSearch()">✖</span>
+        </div>
 
         <form method="get">
             <input type="text" name="SearchTerm" placeholder="Enter model..." value="@Model.SearchTerm" />
-            <button>Search</button>
+            <button class="primary-btn">Search</button>
         </form>
-
     </div>
 
-    <!-- FORM -->
+    <!-- FORM CARD -->
     <div class="card">
         <form method="post">
             <input type="hidden" name="watch_id" value="@Model.Current.watch_id" />
-
-            <input type="text" name="watch_modelname" placeholder="Model"
-                   value="@Model.Current.watch_modelname" required />
-
-            <input type="number" name="stock" placeholder="Stock"
-                   value="@Model.Current.stock" required />
-
+            <input type="text" name="watch_modelname" placeholder="Model" value="@Model.Current.watch_modelname" required />
+            <input type="number" name="stock" placeholder="Stock" value="@Model.Current.stock" required />
+            
             <select name="condition">
-                <option>Brand New</option>
-                <option>Used - Good</option>
-                <option>Used - Fair</option>
+                <option selected="@(Model.Current.condition == "Brand New" ? "selected" : null)">Brand New</option>
+                <option selected="@(Model.Current.condition == "Used - Good" ? "selected" : null)">Used - Good</option>
+                <option selected="@(Model.Current.condition == "Used - Fair" ? "selected" : null)">Used - Fair</option>
             </select>
 
-            <input type="number" name="price" placeholder="Price"
-                   value="@Model.Current.price" required />
-
-            <button>@(Model.IsEdit ? "Update" : "Add")</button>
+            <input type="number" name="price" placeholder="Price" value="@Model.Current.price" required />
+            <button class="primary-btn">@(Model.IsEdit ? "Update Watch" : "Add Watch")</button>
         </form>
     </div>
 
-    <!-- TABLE -->
+    <!-- TABLE CARD -->
     <div class="card">
         <table>
             <thead>
@@ -195,10 +81,9 @@
                     <th>Condition</th>
                     <th>Stock</th>
                     <th>Price</th>
-                    <th></th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-
             <tbody>
                 @foreach (var w in Model.WatchList)
                 {
@@ -208,18 +93,63 @@
                         <td>@w.condition</td>
                         <td>@w.stock</td>
                         <td>₱@w.price</td>
-                        <td class="action">
-                            <a href="?EditId=@w.watch_id">Edit</a>
-                            <a href="?DeleteId=@w.watch_id"
-                               onclick="return confirm('Delete?')">Delete</a>
+                        <td>
+                            <a class="action-link" href="?EditId=@w.watch_id">Edit</a>
+                            <a class="action-link" href="?DeleteId=@w.watch_id" onclick="return confirm('Delete?')">Delete</a>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
-
 </div>
+
+<style>
+    body {
+        margin: 0;
+        padding: 40px;
+        font-family: 'Segoe UI', sans-serif;
+        background: url('/watch.jpg') no-repeat center center fixed;
+        background-size: cover;
+    }
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: -1;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        margin-bottom: 20px;
+    }
+    .search-btn {
+        width: 42px; height: 42px; border-radius: 12px; border: none;
+        background: rgba(255,255,255,0.9); color: black; font-size: 20px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: 0.25s;
+    }
+    .search-btn:hover { transform: scale(1.1); }
+    .search-panel {
+        position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
+        padding: 20px; background: rgba(15,23,42,0.95); backdrop-filter: blur(12px);
+        transition: 0.3s ease; z-index: 1000;
+    }
+    .search-panel.active { right: 0; }
+    .panel-header { display: flex; justify-content: space-between; color: white; margin-bottom: 15px; }
+    .card { background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; }
+    input, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; }
+    select option { background: #1e293b; color: white; }
+    .primary-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; background: white; color: black; font-weight: bold; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: rgba(255,255,255,0.15); text-align: left; }
+    td, th { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .action-link { color: white; text-decoration: none; margin-right: 10px; font-weight: 500; }
+    .close-btn { cursor: pointer; color: white; }
+</style>
 
 <script>
     function toggleSearch() {

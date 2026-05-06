@@ -43,11 +43,26 @@ namespace Watch_Reselling_System___Franco.Pages
             // 🔥 DELETE
             if (DeleteId.HasValue)
             {
-                var cmd = new SqlCommand("DELETE FROM Watch WHERE watch_id=@id", conn);
-                cmd.Parameters.AddWithValue("@id", DeleteId.Value);
-                cmd.ExecuteNonQuery();
+                try
+                {
+                    var cmd = new SqlCommand("DELETE FROM Watch WHERE watch_id=@id", conn);
+                    cmd.Parameters.AddWithValue("@id", DeleteId.Value);
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SqlException ex)
+                {
+                    // Check if it's a Foreign Key violation (Error Number 547)
+                    if (ex.Number == 547)
+                    {
+                        TempData["Error"] = "Cannot delete this watch because it has transaction records.";
+                    }
+                    else
+                    {
+                        TempData["Error"] = "An error occurred while deleting.";
+                    }
+                }
 
-                Response.Redirect("/Watch");
+                Response.Redirect("/Watch"); // Or whatever your page name is
                 return;
             }
 

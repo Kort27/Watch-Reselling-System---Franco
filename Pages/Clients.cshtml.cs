@@ -46,9 +46,25 @@ namespace Watch_Reselling_System___Franco.Pages
             // DELETE
             if (DeleteId.HasValue)
             {
-                var cmd = new SqlCommand("DELETE FROM Clients WHERE ClientId=@id", conn);
-                cmd.Parameters.AddWithValue("@id", DeleteId.Value);
-                cmd.ExecuteNonQuery();
+                if (DeleteId.HasValue)
+                {
+                    // DELETE RELATED TRANSACTIONS FIRST
+                    var deleteTransactions = new SqlCommand(
+                        "DELETE FROM Client_Transaction WHERE ClientId=@id", conn);
+
+                    deleteTransactions.Parameters.AddWithValue("@id", DeleteId.Value);
+                    deleteTransactions.ExecuteNonQuery();
+
+                    // THEN DELETE CLIENT
+                    var deleteClient = new SqlCommand(
+                        "DELETE FROM Clients WHERE ClientId=@id", conn);
+
+                    deleteClient.Parameters.AddWithValue("@id", DeleteId.Value);
+                    deleteClient.ExecuteNonQuery();
+
+                    Response.Redirect("/Clients");
+                    return;
+                }
 
                 Response.Redirect("/Clients");
                 return;

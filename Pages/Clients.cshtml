@@ -1,233 +1,125 @@
 ﻿@page
 @model Watch_Reselling_System___Franco.Pages.ClientsModel
 
-<!-- HEADER -->
-<div class="header">
-
-    <h2 style="color: white">Clients</h2>
-
-    <!-- MATCH TRANSACTION BUTTON -->
-    <button class="filter-btn" onclick="toggleFilter()">
-        ☰
-    </button>
-
-</div>
-
-<!-- ADD / EDIT FORM -->
-<div class="card">
-    <form method="post">
-
-        <input type="hidden" name="Current.ClientId" value="@Model.Current.ClientId" />
-
-        <input type="text" name="Current.FirstName"
-               value="@Model.Current.FirstName"
-               placeholder="First Name" required />
-
-        <input type="text" name="Current.LastName"
-               value="@Model.Current.LastName"
-               placeholder="Last Name" required />
-
-        <input type="email" name="Current.Email"
-               value="@Model.Current.Email"
-               placeholder="Email" required />
-
-        <input type="text" name="Current.ContactNumber"
-               value="@Model.Current.ContactNumber"
-               placeholder="Contact Number" required />
-
-        <button>
-            @(Model.IsEdit ? "Update Client" : "Add Client")
-        </button>
-
-    </form>
-</div>
-
-<!-- FILTER PANEL (SLIDER) -->
-<div id="filterPanel" class="filter-panel">
-
-    <div class="filter-header">
-        <h4>Search Clients</h4>
-        <span class="close-btn" onclick="toggleFilter()">✖</span>
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <h2 style="color: white">Clients</h2>
+        <button class="search-btn" onclick="toggleFilter()">☰</button>
     </div>
 
-    <form method="get">
+    <!-- ADD / EDIT FORM -->
+    <div class="card">
+        <form method="post">
+            <input type="hidden" name="Current.ClientId" value="@Model.Current.ClientId" />
+            <input type="text" name="Current.FirstName" value="@Model.Current.FirstName" placeholder="First Name" required />
+            <input type="text" name="Current.LastName" value="@Model.Current.LastName" placeholder="Last Name" required />
+            <input type="email" name="Current.Email" value="@Model.Current.Email" placeholder="Email" required />
+            <input type="text" name="Current.ContactNumber" value="@Model.Current.ContactNumber" placeholder="Contact Number" required />
+            <button class="primary-btn">@(Model.IsEdit ? "Update Client" : "Add Client")</button>
+        </form>
+    </div>
 
-        <select name="SelectedClientId">
-            <option value="">Select Client</option>
-
-            @foreach (var c in Model.AllClients)
-            {
-                <option value="@c.ClientId"
-                        selected="@(Model.SelectedClientId == c.ClientId ? "selected" : null)">
-                    @c.FirstName @c.LastName
-                </option>
-            }
-        </select>
-
-        <button>Apply</button>
-
-    </form>
-
-    @if (Model.SelectedClientId != null)
-    {
-        <div style="margin-top:15px;">
-            <b>Total Purchases:</b> @Model.TotalPurchases
+    <!-- FILTER PANEL  -->
+    <div id="filterPanel" class="search-panel">
+        <div class="panel-header">
+            <h4>Client History</h4>
+            <span class="close-btn" onclick="toggleFilter()">✖</span>
         </div>
 
-        <br />
+        <form method="get">
+            <select name="SelectedClientId">
+                <option value="">Select Client</option>
+                @foreach (var c in Model.AllClients) {
+                    <option value="@c.ClientId" selected="@(Model.SelectedClientId == c.ClientId ? "selected" : null)">
+                        @c.FirstName @c.LastName
+                    </option>
+                }
+            </select>
+            <button class="primary-btn">View Purchases</button>
+        </form>
 
+        @if (Model.SelectedClientId != null) {
+            <div style="margin-top:20px; color: white;">
+                <p><b>Total Purchases:</b> @Model.TotalPurchases</p>
+                <table style="font-size: 0.85em;">
+                    <thead>
+                        <tr><th>Watch</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.PurchasedTransactions) {
+                            <tr><td>@t.WatchName</td><td>@t.TransactionDate.ToShortDateString()</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <!-- CLIENT TABLE -->
+    <div class="card">
         <table>
             <thead>
                 <tr>
-                    <th>Watch</th>
-                    <th>Type</th>
-                    <th>Date</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-
             <tbody>
-                @if (Model.PurchasedTransactions.Count > 0)
-                {
-                    foreach (var t in Model.PurchasedTransactions)
-                    {
-                        <tr>
-                            <td>@t.WatchName</td>
-                            <td>@t.TransactionType</td>
-                            <td>@t.TransactionDate.ToShortDateString()</td>
-                        </tr>
-                    }
-                }
-                else
-                {
+                @foreach (var c in Model.ClientList) {
                     <tr>
-                        <td colspan="3">No transactions found</td>
+                        <td>@c.ClientId</td>
+                        <td>@c.FirstName @c.LastName</td>
+                        <td>@c.Email</td>
+                        <td>@c.ContactNumber</td>
+                        <td>
+                            <a class="action-link" href="?EditId=@c.ClientId">Edit</a>
+                            <a class="action-link" href="?DeleteId=@c.ClientId" onclick="return confirm('Delete?')">Delete</a>
+                        </td>
                     </tr>
                 }
             </tbody>
         </table>
-    }
-
+    </div>
 </div>
 
-<!-- CLIENT TABLE -->
-<div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Contact</th>
-                <th></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var c in Model.ClientList)
-            {
-                <tr>
-                    <td>@c.ClientId</td>
-                    <td>@c.FirstName @c.LastName</td>
-                    <td>@c.Email</td>
-                    <td>@c.ContactNumber</td>
-                    <td class="action">
-                        <a href="?EditId=@c.ClientId">Edit</a>
-                        <a href="?DeleteId=@c.ClientId"
-                           onclick="return confirm('Delete?')">Delete</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<!-- STYLES -->
 <style>
-    /* HEADER ALIGN */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    body { margin: 0; padding: 40px; font-family: 'Segoe UI', sans-serif; background: url('/watch.jpg') no-repeat center center fixed; background-size: cover; }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: -1; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .search-btn {
+        width: 42px; height: 42px; border-radius: 12px; border: none;
+        background: rgba(255,255,255,0.9); color: black; font-size: 20px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: 0.25s;
     }
-
-    /* SAME BUTTON AS TRANSACTION */
-    .filter-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        border: none;
-        background: rgba(255,255,255,0.85);
-        color: black;
-        font-size: 18px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        transition: 0.2s;
+    .search-panel {
+        position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
+        padding: 20px; background: rgba(15,23,42,0.95); backdrop-filter: blur(12px);
+        transition: 0.3s ease; z-index: 1000;
     }
-
-        .filter-btn:hover {
-            transform: scale(1.1);
-        }
-
-    /* SLIDER PANEL */
-    .filter-panel {
-        position: fixed;
-        top: 0;
-        right: -300px;
-        width: 280px;
-        height: 100%;
-        padding: 20px;
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(12px);
-        transition: 0.3s;
-        z-index: 1000;
-    }
-
-        .filter-panel.active {
-            right: 0;
-        }
-
-    .filter-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-    }
-
-    .close-btn {
-        cursor: pointer;
-        font-size: 18px;
-    }
-
-    /* 🔥 ADD THIS BELOW */
-    select {
-        background: rgba(255,255,255,0.25);
-        color: white;
-        border: none;
-        backdrop-filter: blur(8px);
-    }
-
-        select option {
-            background: #1e293b;
-            color: white;
-        }
-
-            select option:hover {
-                background: #334155;
-            }
+    .search-panel.active { right: 0; }
+    .panel-header { display: flex; justify-content: space-between; color: white; margin-bottom: 15px; }
+    .card { background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; }
+    input, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; }
+    select option { background: #1e293b; color: white; }
+    .primary-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; background: white; color: black; font-weight: bold; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; color: white; }
+    th { background: rgba(255,255,255,0.15); text-align: left; padding: 12px; }
+    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .action-link { color: white; text-decoration: none; margin-right: 10px; font-weight: 500; }
+    .close-btn { cursor: pointer; color: white; }
 </style>
 
-<!-- SCRIPT -->
 <script>
     function toggleFilter() {
         document.getElementById("filterPanel").classList.toggle("active");
     }
-
-    // keep panel open after filtering
     window.onload = function () {
-        const selected = "@Model.SelectedClientId";
-        if (selected) {
+        if ("@Model.SelectedClientId" != "") {
             document.getElementById("filterPanel").classList.add("active");
         }
     }
