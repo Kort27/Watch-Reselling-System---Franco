@@ -17,13 +17,12 @@ namespace Watch_Reselling_System___Franco.Pages
             _config = config;
         }
 
+        // Lists to store data for the UI
         public List<Clients> ClientList { get; set; } = new();
         public List<Clients> AllClients { get; set; } = new();
         public List<Transaction> PurchasedTransactions { get; set; } = new();
 
-
-        // REQUIRED FOR FORM BINDING
-
+        // Binding properties for form and query string data
         [BindProperty]
         public Clients Current { get; set; } = new();
 
@@ -37,7 +36,6 @@ namespace Watch_Reselling_System___Franco.Pages
         public int? SelectedClientId { get; set; }
 
         public bool IsEdit => EditId.HasValue;
-
         public int TotalPurchases { get; set; }
 
         public void OnGet()
@@ -45,34 +43,26 @@ namespace Watch_Reselling_System___Franco.Pages
             using SqlConnection conn = new(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-            // DELETE
+            // Handle client deletion
             if (DeleteId.HasValue)
             {
-                if (DeleteId.HasValue)
-                {
-                    // DELETE RELATED TRANSACTIONS FIRST
-                    var deleteTransactions = new SqlCommand(
-                        "DELETE FROM Client_Transaction WHERE ClientId=@id", conn);
+                // Delete child records first to satisfy foreign key constraints
+                var deleteTransactions = new SqlCommand(
+                    "DELETE FROM Client_Transaction WHERE ClientId=@id", conn);
+                deleteTransactions.Parameters.AddWithValue("@id", DeleteId.Value);
+                deleteTransactions.ExecuteNonQuery();
 
-                    deleteTransactions.Parameters.AddWithValue("@id", DeleteId.Value);
-                    deleteTransactions.ExecuteNonQuery();
-
-                    // THEN DELETE CLIENT
-                    var deleteClient = new SqlCommand(
-                        "DELETE FROM Clients WHERE ClientId=@id", conn);
-
-                    deleteClient.Parameters.AddWithValue("@id", DeleteId.Value);
-                    deleteClient.ExecuteNonQuery();
-
-                    Response.Redirect("/Clients");
-                    return;
-                }
+                // Delete the client record
+                var deleteClient = new SqlCommand(
+                    "DELETE FROM Clients WHERE ClientId=@id", conn);
+                deleteClient.Parameters.AddWithValue("@id", DeleteId.Value);
+                deleteClient.ExecuteNonQuery();
 
                 Response.Redirect("/Clients");
                 return;
             }
 
-            // EDIT LOAD
+            // Load specific client data for the edit form
             if (EditId.HasValue)
             {
                 var cmd = new SqlCommand("SELECT * FROM Clients WHERE ClientId=@id", conn);
@@ -93,9 +83,11 @@ namespace Watch_Reselling_System___Franco.Pages
                 r.Close();
             }
 
+            // Refresh display lists
             LoadAllClients(conn);
             LoadClients(conn);
 
+            // Load transaction details if a client is selected
             if (SelectedClientId.HasValue)
             {
                 LoadTotalPurchases(conn);
@@ -110,6 +102,7 @@ namespace Watch_Reselling_System___Franco.Pages
 
             if (IsEdit)
             {
+                // Update existing client
                 var cmd = new SqlCommand(@"
                     UPDATE Clients
                     SET FirstName=@f, LastName=@l, Email=@e, ContactNumber=@c
@@ -125,6 +118,7 @@ namespace Watch_Reselling_System___Franco.Pages
             }
             else
             {
+                // Insert new client
                 var cmd = new SqlCommand(@"
                     INSERT INTO Clients (FirstName, LastName, Email, ContactNumber)
                     VALUES (@f,@l,@e,@c)", conn);
@@ -140,6 +134,7 @@ namespace Watch_Reselling_System___Franco.Pages
             return RedirectToPage("/Clients");
         }
 
+        // Load simplified client list for selection components
         private void LoadAllClients(SqlConnection conn)
         {
             var cmd = new SqlCommand("SELECT * FROM Clients", conn);
@@ -157,6 +152,7 @@ namespace Watch_Reselling_System___Franco.Pages
             r.Close();
         }
 
+        // Load full client details for the main table
         private void LoadClients(SqlConnection conn)
         {
             var cmd = new SqlCommand("SELECT * FROM Clients", conn);
@@ -176,17 +172,19 @@ namespace Watch_Reselling_System___Franco.Pages
             r.Close();
         }
 
+        // Calculate the sum of quantities sold to a specific client
         private void LoadTotalPurchases(SqlConnection conn)
         {
             var cmd = new SqlCommand(@"
-        SELECT ISNULL(SUM(Quantity), 0)
-        FROM Client_Transaction
-        WHERE ClientId=@id AND TransactionType='Sell'", conn);
+                SELECT ISNULL(SUM(Quantity), 0)
+                FROM Client_Transaction
+                WHERE ClientId=@id AND TransactionType='Sell'", conn);
 
             cmd.Parameters.AddWithValue("@id", SelectedClientId.Value);
             TotalPurchases = Convert.ToInt32(cmd.ExecuteScalar());
         }
 
+        // Fetch transaction history for a specific client
         private void LoadTransactions(SqlConnection conn)
         {
             var cmd = new SqlCommand(@"

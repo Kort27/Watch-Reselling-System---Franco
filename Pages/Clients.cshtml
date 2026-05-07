@@ -2,13 +2,11 @@
 @model Watch_Reselling_System___Franco.Pages.ClientsModel
 
 <div class="container">
-    <!-- HEADER -->
     <div class="header">
         <h2 style="color: white">Clients</h2>
         <button class="search-btn" onclick="toggleFilter()">☰</button>
     </div>
 
-    <!-- ADD / EDIT FORM -->
     <div class="card">
         <form method="post">
             <input type="hidden" name="Current.ClientId" value="@Model.Current.ClientId" />
@@ -20,43 +18,6 @@
         </form>
     </div>
 
-    <!-- FILTER PANEL  -->
-    <div id="filterPanel" class="search-panel">
-        <div class="panel-header">
-            <h4>Client History</h4>
-            <span class="close-btn" onclick="toggleFilter()">✖</span>
-        </div>
-
-        <form method="get">
-            <select name="SelectedClientId">
-                <option value="">Select Client</option>
-                @foreach (var c in Model.AllClients) {
-                    <option value="@c.ClientId" selected="@(Model.SelectedClientId == c.ClientId ? "selected" : null)">
-                        @c.FirstName @c.LastName
-                    </option>
-                }
-            </select>
-            <button class="primary-btn">View Purchases</button>
-        </form>
-
-        @if (Model.SelectedClientId != null) {
-            <div style="margin-top:20px; color: white;">
-                <p><b>Total Purchases:</b> @Model.TotalPurchases</p>
-                <table style="font-size: 0.85em;">
-                    <thead>
-                        <tr><th>Watch</th><th>Date</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var t in Model.PurchasedTransactions) {
-                            <tr><td>@t.WatchName</td><td>@t.TransactionDate.ToShortDateString()</td></tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
-
-    <!-- CLIENT TABLE -->
     <div class="card">
         <table>
             <thead>
@@ -77,25 +38,70 @@
                         <td>@c.ContactNumber</td>
                         <td>
                             <a class="action-link" href="?EditId=@c.ClientId">Edit</a>
-                            <a class="action-link" href="?DeleteId=@c.ClientId" onclick="return confirm('Delete?')">Delete</a>
+                            <a class="action-link" href="?DeleteId=@c.ClientId" onclick="return confirm('Delete?')" style="color: red">Delete</a>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
+
+    <div id="filterPanel" class="search-panel">
+        <div class="panel-header">
+            <h4>Client History</h4>
+            <span class="close-btn" onclick="toggleFilter()">✖</span>
+        </div>
+
+        <form method="get">
+            <select name="SelectedClientId">
+                <option value="">Select Client</option>
+                @foreach (var c in Model.AllClients) {
+                    <option value="@c.ClientId" selected="@(Model.SelectedClientId == c.ClientId ? "selected" : null)">
+                        @c.FirstName @c.LastName
+                    </option>
+                }
+            </select>
+            <button class="primary-btn" style="margin-top: 10px;">View Purchases</button>
+        </form>
+
+        @if (Model.SelectedClientId != null) {
+            <div style="margin-top:20px; color: white;">
+                <p><b>Total Purchases:</b> @Model.TotalPurchases</p>
+                <table style="font-size: 0.85em;">
+                    <thead>
+                        <tr><th>Watch</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.PurchasedTransactions) {
+                            <tr><td>@t.WatchName</td><td>@t.TransactionDate.ToShortDateString()</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
 </div>
 
 <style>
     body { margin: 0; padding: 40px; font-family: 'Segoe UI', sans-serif; background: url('/watch.jpg') no-repeat center center fixed; background-size: cover; }
-    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: -1; }
+    
+    body::before { 
+        content: ""; position: fixed; inset: 0; 
+        /* Updated brightness to match transaction page */
+        background: rgba(0, 0, 0, 0.65); 
+        z-index: -1; 
+    }
+    
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    
     .search-btn {
         width: 42px; height: 42px; border-radius: 12px; border: none;
         background: rgba(255,255,255,0.9); color: black; font-size: 20px;
         cursor: pointer; display: flex; align-items: center; justify-content: center;
         box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: 0.25s;
     }
+    
+    /* PANEL (History) */
     .search-panel {
         position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
         padding: 20px; background: rgba(15,23,42,0.95); backdrop-filter: blur(12px);
@@ -103,14 +109,31 @@
     }
     .search-panel.active { right: 0; }
     .panel-header { display: flex; justify-content: space-between; color: white; margin-bottom: 15px; }
-    .card { background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; }
-    input, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; }
+    
+    /* GLASS CARDS */
+    .card { 
+        background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); 
+        padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; 
+        border: 1px solid rgba(255,255,255,0.08); /* Original subtle border */
+    }
+    
+    /* FORM */
+    input, select { 
+        width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: none; 
+        background: rgba(255,255,255,0.2); color: white; box-sizing: border-box;
+    }
     select option { background: #1e293b; color: white; }
+    
     .primary-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; background: white; color: black; font-weight: bold; cursor: pointer; }
+    
+    /* TABLE */
     table { width: 100%; border-collapse: collapse; color: white; }
     th { background: rgba(255,255,255,0.15); text-align: left; padding: 12px; }
     td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); }
-    .action-link { color: white; text-decoration: none; margin-right: 10px; font-weight: 500; }
+    
+    /* LINKS */
+    .action-link { color: white; text-decoration: none; margin-right: 10px; font-weight: 500; font-size: 0.9em; }
+    .action-link:hover { text-decoration: underline; }
     .close-btn { cursor: pointer; color: white; }
 </style>
 

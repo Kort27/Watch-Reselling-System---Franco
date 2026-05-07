@@ -1,158 +1,441 @@
 ﻿@page
 @model Watch_Reselling_System___Franco.Pages.WatchModel
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert" 
-         style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid #ff3b30; backdrop-filter: blur(10px); border-radius: 10px; margin-bottom: 20px; padding: 15px;">
-        <i class="bi bi-exclamation-triangle-fill"></i> 
-        <strong></strong> @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid #34c759; backdrop-filter: blur(10px); border-radius: 10px; margin-bottom: 20px; padding: 15px;">
-        <i class="bi bi-check-circle-fill"></i> 
-        <strong>Success:</strong> @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
 <div class="container">
+
     <!-- HEADER -->
     <div class="header">
         <h2>Watch Inventory</h2>
-
-                    @if (TempData["Error"] != null)
-{
-    <div style="background: rgba(255, 0, 0, 0.2); color: #ff8888; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(255, 0, 0, 0.3); backdrop-filter: blur(10px);">
-        <b>⚠️ Warning:</b> @TempData["Error"]
-    </div>
-}
-
-
-
-
-        <!-- SEARCH BUTTON  -->
         <button class="search-btn" onclick="toggleSearch()">☰</button>
     </div>
 
-    <!-- 🔍 SEARCH PANEL (TRANSACTION STYLE) -->
-    <div id="searchPanel" class="search-panel">
-        <div class="panel-header">
-            <h4>Search Watch</h4>
-            <span class="close-btn" onclick="toggleSearch()">✖</span>
-        </div>
-
-        <form method="get">
-            <input type="text" name="SearchTerm" placeholder="Enter model..." value="@Model.SearchTerm" />
-            <button class="primary-btn">Search</button>
-        </form>
-    </div>
-
-    <!-- FORM CARD -->
+    <!-- INPUT FORM CARD -->
     <div class="card">
         <form method="post">
             <input type="hidden" name="watch_id" value="@Model.Current.watch_id" />
-            <input type="text" name="watch_modelname" placeholder="Model" value="@Model.Current.watch_modelname" required />
-            <input type="number" name="stock" placeholder="Stock" value="@Model.Current.stock" required />
-            
-            <select name="condition">
-                <option selected="@(Model.Current.condition == "Brand New" ? "selected" : null)">Brand New</option>
-                <option selected="@(Model.Current.condition == "Used - Good" ? "selected" : null)">Used - Good</option>
-                <option selected="@(Model.Current.condition == "Used - Fair" ? "selected" : null)">Used - Fair</option>
-            </select>
 
-            <input type="number" name="price" placeholder="Price" value="@Model.Current.price" required />
-            <button class="primary-btn">@(Model.IsEdit ? "Update Watch" : "Add Watch")</button>
+            <div class="form-grid">
+
+                <div class="input-group">
+                    <label class="field-label">Model Name</label>
+                    <input type="text"
+                           name="watch_modelname"
+                           placeholder="Model Name"
+                           value="@Model.Current.watch_modelname"
+                           required />
+                </div>
+
+                <div class="input-group">
+                    <label class="field-label">Stock</label>
+                    <input type="number"
+                           name="stock"
+                           placeholder="0"
+                           value="@Model.Current.stock"
+                           required />
+                </div>
+
+                <div class="input-group">
+                    <label class="field-label">Condition</label>
+                    <select name="condition" required>
+                        <option value="" disabled selected>Condition</option>
+
+                        <option value="Brand New"
+                                selected="@(Model.Current.condition == "Brand New" ? "selected" : null)">
+                            Brand New
+                        </option>
+
+                        <option value="Used - Good"
+                                selected="@(Model.Current.condition == "Used - Good" ? "selected" : null)">
+                            Used - Good
+                        </option>
+
+                        <option value="Used - Fair"
+                                selected="@(Model.Current.condition == "Used - Fair" ? "selected" : null)">
+                            Used - Fair
+                        </option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="field-label">Price (₱)</label>
+                    <input type="number"
+                           name="price"
+                           placeholder="0"
+                           value="@Model.Current.price"
+                           required />
+                </div>
+
+                <div class="input-group">
+                    <label class="field-label">&nbsp;</label>
+                    <button type="submit" class="primary-btn">
+                        @(Model.IsEdit ? "Update" : "Add")
+                    </button>
+                </div>
+
+            </div>
         </form>
     </div>
 
     <!-- TABLE CARD -->
     <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Model</th>
-                    <th>Condition</th>
-                    <th>Stock</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var w in Model.WatchList)
-                {
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
                     <tr>
-                        <td>@w.watch_id</td>
-                        <td>@w.watch_modelname</td>
-                        <td>@w.condition</td>
-                        <td>@w.stock</td>
-                        <td>₱@w.price</td>
-                        <td>
-                            <a class="action-link" href="?EditId=@w.watch_id">Edit</a>
-                            <a class="action-link" href="?DeleteId=@w.watch_id" onclick="return confirm('Delete?')">Delete</a>
-                        </td>
+                        <th>ID</th>
+                        <th>Model</th>
+                        <th>Condition</th>
+                        <th>Stock</th>
+                        <th>Price</th>
+                        <th>Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    @foreach (var w in Model.WatchList)
+                    {
+                        <tr>
+                            <td class="id-text">@w.watch_id</td>
+                            <td>@w.watch_modelname</td>
+                            <td>@w.condition</td>
+                            <td>@w.stock</td>
+                            <td>₱@w.price.ToString("N2")</td>
+
+                            <td>
+                                <a class="action-link"
+                                       href="?EditId=@w.watch_id">
+                                    Edit
+                                </a>
+
+                                <a class="action-link delete-link"
+                                       href="?DeleteId=@w.watch_id"
+                                       onclick="return confirm('Delete watch?')">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <!-- SEARCH PANEL -->
+    <div id="searchPanel" class="search-panel">
+
+        <div class="panel-header">
+            <h4>Filters</h4>
+            <span class="close-btn" onclick="toggleSearch()">✖</span>
+        </div>
+
+        <form method="get">
+
+            <label class="field-label">Model Name</label>
+
+            <input type="text"
+                   name="SearchTerm"
+                   placeholder="Search model..."
+                   value="@Model.SearchTerm" />
+
+            <label class="field-label" style="margin-top: 15px;">
+                Condition
+            </label>
+
+            <select name="SearchCondition">
+                <option value="">All Conditions</option>
+                <option value="Brand New">Brand New</option>
+                <option value="Used - Good">Used - Good</option>
+                <option value="Used - Fair">Used - Fair</option>
+            </select>
+
+            <button type="submit"
+                    class="primary-btn"
+                    style="margin-top: 20px;">
+                Apply Filters
+            </button>
+
+            <a href="/Watch" class="clear-link">
+                Clear All
+            </a>
+
+        </form>
+    </div>
+
 </div>
 
 <style>
+
     body {
         margin: 0;
         padding: 40px;
         font-family: 'Segoe UI', sans-serif;
         background: url('/watch.jpg') no-repeat center center fixed;
         background-size: cover;
+        color: white;
     }
-    body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.6);
-        z-index: -1;
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: -1;
+        }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
     }
+
+    /* HEADER */
+
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        color: white;
         margin-bottom: 20px;
     }
+
+        .header h2 {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+    /* FILTER BUTTON */
+
     .search-btn {
-        width: 42px; height: 42px; border-radius: 12px; border: none;
-        background: rgba(255,255,255,0.9); color: black; font-size: 20px;
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: 0.25s;
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        border: none;
+        background: rgba(255,255,255,0.9);
+        color: black;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        transition: 0.25s;
     }
-    .search-btn:hover { transform: scale(1.1); }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+    /* CARD */
+
+    .card {
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: 22px;
+        border-radius: 16px;
+        margin-bottom: 22px;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    /* FORM */
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1.2fr 1.2fr 120px;
+        gap: 14px;
+        align-items: end;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .field-label {
+        font-size: 0.8em;
+        color: rgba(255,255,255,0.75);
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    /* INPUTS */
+
+    input,
+    select {
+        width: 100%;
+        height: 46px;
+        padding: 0 14px;
+        border-radius: 9px;
+        border: none;
+        background: rgba(255,255,255,0.18);
+        color: white;
+        box-sizing: border-box;
+        outline: none;
+        font-size: 14px;
+        transition: 0.2s ease;
+    }
+
+        input:focus,
+        select:focus {
+            background: rgba(255,255,255,0.25);
+        }
+
+        input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        select option {
+            background: #1e293b;
+            color: white;
+        }
+
+    /* BUTTON */
+
+    .primary-btn {
+        width: 100%;
+        height: 46px;
+        border-radius: 9px;
+        border: none;
+        background: white;
+        color: black;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 14px;
+    }
+
+        .primary-btn:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+    /* TABLE */
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        padding: 15px;
+        background: rgba(255,255,255,0.08);
+        color: #cbd5e1;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    td {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        font-size: 14px;
+    }
+
+    tr:hover {
+        background: rgba(255,255,255,0.03);
+    }
+
+    .id-text {
+        color: #d1d5db;
+        font-family: monospace;
+    }
+
+    /* ACTION LINKS */
+
+    .action-link {
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9em;
+        margin-right: 15px;
+        transition: 0.2s;
+        color: white;
+        opacity: 0.85;
+    }
+
+        .action-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+    .delete-link {
+        color: #ff3b30;
+    }
+
+    /* SEARCH PANEL */
+
     .search-panel {
-        position: fixed; top: 0; right: -300px; width: 280px; height: 100%;
-        padding: 20px; background: rgba(15,23,42,0.95); backdrop-filter: blur(12px);
-        transition: 0.3s ease; z-index: 1000;
+        position: fixed;
+        top: 0;
+        right: -320px;
+        width: 280px;
+        height: 100%;
+        padding: 25px;
+        background: rgba(15,23,42,0.95);
+        backdrop-filter: blur(12px);
+        transition: 0.4s ease;
+        z-index: 1000;
+        box-shadow: -5px 0 15px rgba(0,0,0,0.5);
     }
-    .search-panel.active { right: 0; }
-    .panel-header { display: flex; justify-content: space-between; color: white; margin-bottom: 15px; }
-    .card { background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; }
-    input, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; }
-    select option { background: #1e293b; color: white; }
-    .primary-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; background: white; color: black; font-weight: bold; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: rgba(255,255,255,0.15); text-align: left; }
-    td, th { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.2); }
-    .action-link { color: white; text-decoration: none; margin-right: 10px; font-weight: 500; }
-    .close-btn { cursor: pointer; color: white; }
+
+        .search-panel.active {
+            right: 0;
+        }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+        .panel-header h4 {
+            margin: 0;
+        }
+
+    .close-btn {
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .clear-link {
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 0.85em;
+    }
+
+        .clear-link:hover {
+            text-decoration: underline;
+        }
+
+    /* RESPONSIVE */
+
+    @@media (max-width: 1000px) {
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .container {
+            padding: 0;
+        }
+
+        body {
+            padding: 20px;
+        }
+    }
+
 </style>
 
 <script>
+
     function toggleSearch() {
         document.getElementById("searchPanel").classList.toggle("active");
     }
+
 </script>

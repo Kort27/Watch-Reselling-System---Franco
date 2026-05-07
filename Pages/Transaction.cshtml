@@ -1,6 +1,7 @@
 ﻿@page
 @model Watch_Reselling_System___Franco.Pages.TransactionModel
 
+@* Notification Alerts *@
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
@@ -24,7 +25,6 @@
 <!-- HEADER -->
 <div class="header">
     <h2>Transactions</h2>
-    <!-- FILTER BUTTON -->
     <button class="search-btn" onclick="toggleSearch()">☰</button>
 </div>
 
@@ -36,7 +36,7 @@
     </div>
 
     <form method="get">
-        <label style="color:white; font-size: 0.8em;">Client</label>
+        <label>Client</label>
         <select name="FilterClientId">
             <option value="">All Clients</option>
             @foreach (var c in Model.Clients)
@@ -47,57 +47,76 @@
             }
         </select>
 
-        <label style="color:white; font-size: 0.8em;">Watch Model</label>
+        <label style="margin-top: 15px; display: block;">Watch Model</label>
         <input type="text" name="SearchWatch" value="@Model.SearchWatch" placeholder="Enter model name..." />
 
-        <label style="color:white; font-size: 0.8em;">Transaction Type</label>
+        <label style="margin-top: 15px; display: block;">Transaction Type</label>
         <select name="FilterType">
             <option value="">All Types</option>
             <!option value="Sell" @(Model.FilterType == "Sell" ? "selected" : "")>Sell</!option>
             <!option value="Buy" @(Model.FilterType == "Buy" ? "selected" : "")>Buy (Brand New)</!option>
         </select>
 
-        <button type="submit" style="margin-top: 15px; background: #34c759; color: white;">Apply Filters</button>
-        <a href="/Transaction" class="action-link" style="display:block; text-align:center; margin-top:15px;">Clear All</a>
+        <button type="submit" style="margin-top: 20px; background: white; color: black;">Apply Filters</button>
+        <a href="/Transaction" class="clear-link">Clear All</a>
     </form>
 </div>
 
 <!-- INPUT FORM CARD -->
 <div class="card">
-    <form method="post">
+    <form method="post" class="transaction-form">
         <input type="hidden" name="Current.TransactionId" value="@Model.Current.TransactionId" />
 
-        <select name="Current.ClientId" required>
-            <option value="">-- Select Client --</option>
-            @foreach (var c in Model.Clients)
-            {
-                <option value="@c.ClientId" selected="@(Model.Current.ClientId == c.ClientId ? "selected" : null)">
-                    @c.FirstName @c.LastName
-                </option>
-            }
-        </select>
+        <div class="input-group">
+            <label>Client Name</label>
+            <select name="Current.ClientId" required>
+                <option value="">Select Client</option>
+                @foreach (var c in Model.Clients)
+                {
+                    <option value="@c.ClientId" selected="@(Model.Current.ClientId == c.ClientId ? "selected" : null)">
+                        @c.FirstName @c.LastName
+                    </option>
+                }
+            </select>
+        </div>
 
-        <select id="watchSelect" name="Current.WatchId" required>
-            <option value="">-- Select Watch --</option>
-            @foreach (var w in Model.Watches)
-            {
-                <option value="@w.watch_id" data-price="@w.price" selected="@(Model.Current.WatchId == w.watch_id ? "selected" : null)">
-                    @w.watch_modelname (₱@w.price | Stock:@w.stock)
-                </option>
-            }
-        </select>
+        <div class="input-group">
+            <label>Watch Model</label>
+            <select id="watchSelect" name="Current.WatchId" required>
+                <option value="">Select Watch</option>
+                @foreach (var w in Model.Watches)
+                {
+                    <option value="@w.watch_id" data-price="@w.price" selected="@(Model.Current.WatchId == w.watch_id ? "selected" : null)">
+                        @w.watch_modelname (₱@w.price.ToString("N0") | Stock:@w.stock)
+                    </option>
+                }
+            </select>
+        </div>
 
-        <select id="typeSelect" name="Current.TransactionType">
-            <option value="Sell" selected="@(Model.Current.TransactionType == "Sell" ? "selected" : null)">Sell</option>
-            <option value="Buy" selected="@(Model.Current.TransactionType == "Buy" ? "selected" : null)">Buy (Brand New)</option>
-        </select>
+        <div class="input-group">
+            <label>Type</label>
+            <select id="typeSelect" name="Current.TransactionType">
+                <option value="Sell" selected="@(Model.Current.TransactionType == "Sell" ? "selected" : null)">Sell</option>
+                <option value="Buy" selected="@(Model.Current.TransactionType == "Buy" ? "selected" : null)">Buy (New)</option>
+            </select>
+        </div>
 
-        <input id="priceInput" name="Current.Price" value="@Model.Current.Price" placeholder="Price" required />
-        <input type="number" name="Current.Quantity" value="@Model.Current.Quantity" min="1" placeholder="Quantity" required />
+        <div class="input-group">
+            <label>Price (₱)</label>
+            <input id="priceInput" name="Current.Price" value="@Model.Current.Price" placeholder="0.00" required />
+        </div>
 
-        <button type="submit">
-            @(Model.IsEdit ? "Update Transaction" : "Add Transaction")
-        </button>
+        <div class="input-group">
+            <label>Quantity</label>
+            <input type="number" name="Current.Quantity" value="@Model.Current.Quantity" min="1" placeholder="1" required />
+        </div>
+
+        <div class="input-group">
+            <label>&nbsp;</label>
+            <button type="submit" class="submit-btn">
+                @(Model.IsEdit ? "Update" : "Add")
+            </button>
+        </div>
     </form>
 </div>
 
@@ -111,7 +130,7 @@
                     <th>Client</th>
                     <th>Watch</th>
                     <th>Type</th>
-                    <th>Qty</th>
+                    <th>Quantity</th>
                     <th>Price</th>
                     <th>Total</th>
                     <th>Date</th>
@@ -126,17 +145,17 @@
                         <td>@t.ClientName</td>
                         <td>@t.WatchName</td>
                         <td>
-                            <span style="color: @(t.TransactionType == "Sell" ? "#ff3b30" : "#34c759")">
+                            <span style="color: @(t.TransactionType == "Sell" ? "#ff3b30" : "#34c759"); font-weight: bold;">
                                 @t.TransactionType
                             </span>
                         </td>
                         <td>@t.Quantity</td>
-                        <td>₱@t.Price</td>
-                        <td>₱@(t.Price * t.Quantity)</td>
+                        <td>₱@t.Price.ToString("N2")</td>
+                        <td>₱@((t.Price * t.Quantity).ToString("N2"))</td>
                         <td>@t.TransactionDate.ToShortDateString()</td>
                         <td>
-                            <a class="action-link" href="?EditId=@t.TransactionId">Edit</a>
-                            <a class="action-link" style="color: #ff3b30;" href="?DeleteId=@t.TransactionId" onclick="return confirm('Delete transaction?')">Delete</a>
+                            <a class="action-link edit-btn-white" href="?EditId=@t.TransactionId">Edit</a>
+                            <a class="action-link delete-btn-red" href="?DeleteId=@t.TransactionId" onclick="return confirm('Delete transaction?')">Delete</a>
                         </td>
                     </tr>
                 }
@@ -146,23 +165,45 @@
 </div>
 
 <style>
-    body { margin: 0; padding: 40px; font-family: 'Segoe UI', sans-serif; background: url('/watch.jpg') no-repeat center center fixed; background-size: cover; }
-    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: -1; }
-    .header { display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 20px; }
-    .search-btn { width: 42px; height: 42px; border-radius: 12px; border: none; background: rgba(255,255,255,0.9); color: black; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: 0.25s; }
-    .search-panel { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; padding: 20px; background: rgba(15,23,42,0.95); backdrop-filter: blur(12px); transition: 0.3s ease; z-index: 1000; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+    body { margin: 0; padding: 40px; font-family: 'Segoe UI', sans-serif; background: url('/watch.jpg') no-repeat center center fixed; background-size: cover; color: white; }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: -1; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    
+    .search-btn { width: 45px; height: 45px; border-radius: 12px; border: none; background: rgba(255,255,255,0.9); color: black; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: 0.25s; }
+    
+    .search-panel { position: fixed; top: 0; right: -320px; width: 280px; height: 100%; padding: 25px; background: rgba(15,23,42,0.95); backdrop-filter: blur(12px); transition: 0.4s ease; z-index: 1000; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
     .search-panel.active { right: 0; }
-    .panel-header { display: flex; justify-content: space-between; color: white; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-    .card { background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; border: 1px solid rgba(255,255,255,0.1); }
-    input, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; box-sizing: border-box; }
+    .panel-header { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
+
+    .card { background: rgba(255,255,255,0.12); backdrop-filter: blur(15px); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+
+    /* Form Layout */
+    .transaction-form { display: grid; grid-template-columns: 1.5fr 2fr 1fr 1fr 0.8fr 1fr; gap: 12px; align-items: end; }
+    .input-group { display: flex; flex-direction: column; }
+    .input-group label { font-size: 0.8em; color: rgba(255,255,255,0.7); margin-bottom: 5px; font-weight: 600; }
+
+    input, select { width: 100%; padding: 12px; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; box-sizing: border-box; outline: none; }
     select option { background: #1e293b; color: white; }
-    button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: white; color: black; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    button:hover { opacity: 0.9; }
+
+    .submit-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: white; color: black; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .submit-btn:hover { background: #e2e8f0; transform: translateY(-2px); }
+
     table { width: 100%; border-collapse: collapse; }
-    th { background: rgba(255,255,255,0.15); text-align: left; }
-    td, th { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .action-link { color: white; text-decoration: none; margin-right: 10px; font-weight: 500; font-size: 0.9em; }
-    .close-btn { color: white; font-size: 1.2em; cursor: pointer; }
+    th { text-align: left; padding: 15px; background: rgba(255,255,255,0.1); color: #cbd5e1; }
+    td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+    .action-link { text-decoration: none; font-weight: 500; font-size: 0.9em; margin-right: 15px; transition: 0.2s; }
+    
+    /* White Edit Button */
+    .edit-btn-white { color: white; opacity: 0.8; }
+    .edit-btn-white:hover { opacity: 1; text-decoration: underline; }
+    
+    .delete-btn-red { color: #ff3b30; }
+    .delete-btn-red:hover { text-decoration: underline; }
+
+    .clear-link { display: block; text-align: center; margin-top: 15px; color: #94a3b8; text-decoration: none; font-size: 0.85em; }
+    .close-btn { cursor: pointer; }
 </style>
 
 <script>
@@ -187,9 +228,6 @@
         } else {
             priceInput.readOnly = false;
             priceInput.style.opacity = "1";
-            if (!priceInput.value || priceInput.value == "0") {
-                priceInput.value = price;
-            }
         }
     }
 
