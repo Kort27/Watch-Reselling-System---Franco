@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
@@ -21,15 +21,23 @@ namespace Watch_Reselling_System___Franco.Pages
         [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
         [BindProperty(SupportsGet = true)] public int? DeleteId { get; set; }
 
+<<<<<<< HEAD
         //  Capture the client selection from the sidebar search
+=======
+        
+>>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
         [BindProperty(SupportsGet = true)] public int? FilterClientId { get; set; }
 
         public bool IsEdit => EditId.HasValue;
 
-        // ========================= GET =========================
+        
         public void OnGet()
         {
+<<<<<<< HEAD
             // Handle Delete separately to avoid connection/reader conflicts 
+=======
+            
+>>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
             if (DeleteId.HasValue)
             {
                 DeleteTransaction(DeleteId.Value);
@@ -46,7 +54,7 @@ namespace Watch_Reselling_System___Franco.Pages
             LoadData();
         }
 
-        // ========================= POST =========================
+        
         public IActionResult OnPost()
         {
             if (Current.Quantity <= 0)
@@ -61,7 +69,11 @@ namespace Watch_Reselling_System___Franco.Pages
 
             decimal finalPrice = 0;
 
+<<<<<<< HEAD
             // STOCK CHECK logic to prevent negative stock 
+=======
+            // STOCK CHECK 
+>>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
             if (Current.TransactionType == "Sell")
             {
                 var checkCmd = new SqlCommand("SELECT price, stock FROM Watch WHERE watch_id=@id", conn);
@@ -113,7 +125,11 @@ namespace Watch_Reselling_System___Franco.Pages
 
         private void LoadData()
         {
+<<<<<<< HEAD
             // Fresh connection per load to fix reader errors
+=======
+            // Fresh connection per load to fix reader errors 
+>>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
@@ -136,7 +152,11 @@ namespace Watch_Reselling_System___Franco.Pages
             }
 
             TransactionList.Clear();
+<<<<<<< HEAD
             // Filter logic using the Sidebar selection
+=======
+            // Filter logic using the Sidebar selection 
+>>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
             string sql = @"
                 SELECT t.*, c.FirstName + ' ' + c.LastName AS ClientName, w.watch_modelname AS WatchName
                 FROM Client_Transaction t
