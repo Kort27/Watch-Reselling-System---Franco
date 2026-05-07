@@ -6,7 +6,7 @@
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
          style="background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid #ff3b30; backdrop-filter: blur(10px); border-radius: 10px; margin-bottom: 20px; padding: 15px;">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        <strong></strong> @TempData["Error"]
+        @TempData["Error"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
@@ -24,9 +24,6 @@
 <!-- HEADER -->
 <div class="header">
     <h2>Transactions</h2>
-
-
-
     <!-- FILTER BUTTON -->
     <button class="search-btn" onclick="toggleSearch()">☰</button>
 </div>
@@ -34,13 +31,13 @@
 <!-- SEARCH PANEL -->
 <div id="searchPanel" class="search-panel">
     <div class="panel-header">
-        <h4>Search</h4>
+        <h4>Filters</h4>
         <span class="close-btn" onclick="toggleSearch()">✖</span>
     </div>
 
-    <!-- UPDATED FILTER FORM -->
     <form method="get">
-        <select name="FilterClientId" onchange="this.form.submit()">
+        <label style="color:white; font-size: 0.8em;">Client</label>
+        <select name="FilterClientId">
             <option value="">All Clients</option>
             @foreach (var c in Model.Clients)
             {
@@ -49,273 +46,147 @@
                 </!option>
             }
         </select>
-        <a href="/Transaction" class="action-link" style="display:block; text-align:center; margin-top:10px;">Clear Filter</a>
+
+        <label style="color:white; font-size: 0.8em;">Watch Model</label>
+        <input type="text" name="SearchWatch" value="@Model.SearchWatch" placeholder="Enter model name..." />
+
+        <label style="color:white; font-size: 0.8em;">Transaction Type</label>
+        <select name="FilterType">
+            <option value="">All Types</option>
+            <!option value="Sell" @(Model.FilterType == "Sell" ? "selected" : "")>Sell</!option>
+            <!option value="Buy" @(Model.FilterType == "Buy" ? "selected" : "")>Buy (Brand New)</!option>
+        </select>
+
+        <button type="submit" style="margin-top: 15px; background: #34c759; color: white;">Apply Filters</button>
+        <a href="/Transaction" class="action-link" style="display:block; text-align:center; margin-top:15px;">Clear All</a>
     </form>
 </div>
 
-<!-- FORM -->
+<!-- INPUT FORM CARD -->
 <div class="card">
     <form method="post">
-
         <input type="hidden" name="Current.TransactionId" value="@Model.Current.TransactionId" />
 
-        <!-- CLIENT -->
         <select name="Current.ClientId" required>
+            <option value="">-- Select Client --</option>
             @foreach (var c in Model.Clients)
             {
-                <option value="@c.ClientId"
-                        selected="@(Model.Current.ClientId == c.ClientId ? "selected" : null)">
+                <option value="@c.ClientId" selected="@(Model.Current.ClientId == c.ClientId ? "selected" : null)">
                     @c.FirstName @c.LastName
                 </option>
             }
         </select>
 
-        <!-- WATCH -->
         <select id="watchSelect" name="Current.WatchId" required>
+            <option value="">-- Select Watch --</option>
             @foreach (var w in Model.Watches)
             {
-                <option value="@w.watch_id"
-                        data-price="@w.price"
-                        selected="@(Model.Current.WatchId == w.watch_id ? "selected" : null)">
+                <option value="@w.watch_id" data-price="@w.price" selected="@(Model.Current.WatchId == w.watch_id ? "selected" : null)">
                     @w.watch_modelname (₱@w.price | Stock:@w.stock)
                 </option>
             }
         </select>
 
-        <!-- TYPE -->
-        <select name="Current.TransactionType">
+        <select id="typeSelect" name="Current.TransactionType">
             <option value="Sell" selected="@(Model.Current.TransactionType == "Sell" ? "selected" : null)">Sell</option>
             <option value="Buy" selected="@(Model.Current.TransactionType == "Buy" ? "selected" : null)">Buy (Brand New)</option>
         </select>
 
-        <!-- PRICE -->
-        <input id="priceInput"
-               name="Current.Price"
-               value="@Model.Current.Price"
-               placeholder="Price" required />
+        <input id="priceInput" name="Current.Price" value="@Model.Current.Price" placeholder="Price" required />
+        <input type="number" name="Current.Quantity" value="@Model.Current.Quantity" min="1" placeholder="Quantity" required />
 
-        <!-- QUANTITY -->
-        <input type="number"
-               name="Current.Quantity"
-               value="@Model.Current.Quantity"
-               min="1"
-               placeholder="Quantity"
-               required />
-
-        <button>
+        <button type="submit">
             @(Model.IsEdit ? "Update Transaction" : "Add Transaction")
         </button>
-
     </form>
 </div>
 
-<!-- TABLE -->
+<!-- TABLE CARD -->
 <div class="card">
-    <table>
-        <thead>
-            <tr>
-                <th>Transaction ID</th>
-                <th>Client</th>
-                <th>Watch</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Total</th>
-                <th>Date</th>
-                <th></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var t in Model.TransactionList)
-            {
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
                 <tr>
-                    <td>@t.TransactionId</td>
-                    <td>@t.ClientName</td>
-                    <td>@t.WatchName</td>
-                    <td>@t.TransactionType</td>
-                    <td>@t.Quantity</td>
-                    <td>₱@t.Price</td>
-                    <td>₱@(t.Price * t.Quantity)</td>
-                    <td>@t.TransactionDate.ToShortDateString()</td>
-                    <td>
-                        <a class="action-link" href="?EditId=@t.TransactionId">Edit</a>
-                        <a class="action-link" href="?DeleteId=@t.TransactionId"
-                           onclick="return confirm('Delete?')">Delete</a>
-                    </td>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>Watch</th>
+                    <th>Type</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                    <th>Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.TransactionList)
+                {
+                    <tr>
+                        <td>@t.TransactionId</td>
+                        <td>@t.ClientName</td>
+                        <td>@t.WatchName</td>
+                        <td>
+                            <span style="color: @(t.TransactionType == "Sell" ? "#ff3b30" : "#34c759")">
+                                @t.TransactionType
+                            </span>
+                        </td>
+                        <td>@t.Quantity</td>
+                        <td>₱@t.Price</td>
+                        <td>₱@(t.Price * t.Quantity)</td>
+                        <td>@t.TransactionDate.ToShortDateString()</td>
+                        <td>
+                            <a class="action-link" href="?EditId=@t.TransactionId">Edit</a>
+                            <a class="action-link" style="color: #ff3b30;" href="?DeleteId=@t.TransactionId" onclick="return confirm('Delete transaction?')">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<!-- STYLE -->
 <style>
-
-    /* BACKGROUND */
-    body {
-        margin: 0;
-        padding: 40px;
-        font-family: 'Segoe UI', sans-serif;
-        background: url('/watch.jpg') no-repeat center center fixed;
-        background-size: cover;
-    }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: -1;
-        }
-
-    /* HEADER */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: white;
-        margin-bottom: 20px;
-    }
-
-    /* FILTER BUTTON */
-    .search-btn {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        border: none;
-        background: rgba(255,255,255,0.9);
-        color: black;
-        font-size: 20px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        transition: 0.25s;
-    }
-
-        .search-btn:hover {
-            transform: scale(1.1);
-        }
-
-    /* PANEL */
-    .search-panel {
-        position: fixed;
-        top: 0;
-        right: -300px;
-        width: 280px;
-        height: 100%;
-        padding: 20px;
-        background: rgba(15,23,42,0.95);
-        backdrop-filter: blur(12px);
-        transition: 0.3s ease;
-        z-index: 1000;
-    }
-
-        .search-panel.active {
-            right: 0;
-        }
-
-    .panel-header {
-        display: flex;
-        justify-content: space-between;
-        color: white;
-        margin-bottom: 15px;
-    }
-
-    .close-btn {
-        cursor: pointer;
-    }
-
-    /* CARD */
-    .card {
-        background: rgba(255,255,255,0.12);
-        backdrop-filter: blur(12px);
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        color: white;
-    }
-
-    /* INPUTS */
-    input, select {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 8px;
-        border: none;
-        background: rgba(255,255,255,0.2);
-        color: white;
-    }
-
-        /* SELECT DARK */
-        select option {
-            background: #1e293b;
-            color: white;
-        }
-
-    /* BUTTON */
-    button {
-        width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        border: none;
-        background: white;
-        color: black;
-        font-weight: bold;
-    }
-
-    /* TABLE */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th {
-        background: rgba(255,255,255,0.15);
-    }
-
-    td, th {
-        padding: 12px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-    }
-
-    /* ACTION LINKS (WHITE) */
-    .action-link {
-        color: white;
-        text-decoration: none;
-        margin-right: 10px;
-        font-weight: 500;
-    }
-
-        .action-link:hover {
-            color: #e2e8f0;
-        }
-
+    body { margin: 0; padding: 40px; font-family: 'Segoe UI', sans-serif; background: url('/watch.jpg') no-repeat center center fixed; background-size: cover; }
+    body::before { content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: -1; }
+    .header { display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 20px; }
+    .search-btn { width: 42px; height: 42px; border-radius: 12px; border: none; background: rgba(255,255,255,0.9); color: black; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: 0.25s; }
+    .search-panel { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; padding: 20px; background: rgba(15,23,42,0.95); backdrop-filter: blur(12px); transition: 0.3s ease; z-index: 1000; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+    .search-panel.active { right: 0; }
+    .panel-header { display: flex; justify-content: space-between; color: white; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .card { background: rgba(255,255,255,0.12); backdrop-filter: blur(12px); padding: 20px; border-radius: 12px; margin-bottom: 20px; color: white; border: 1px solid rgba(255,255,255,0.1); }
+    input, select { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; box-sizing: border-box; }
+    select option { background: #1e293b; color: white; }
+    button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: white; color: black; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button:hover { opacity: 0.9; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: rgba(255,255,255,0.15); text-align: left; }
+    td, th { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .action-link { color: white; text-decoration: none; margin-right: 10px; font-weight: 500; font-size: 0.9em; }
+    .close-btn { color: white; font-size: 1.2em; cursor: pointer; }
 </style>
 
-<!-- SCRIPT -->
 <script>
     function toggleSearch() {
         document.getElementById("searchPanel").classList.toggle("active");
     }
 
-    /* PRICE LOGIC */
     const watchSelect = document.getElementById("watchSelect");
     const priceInput = document.getElementById("priceInput");
-    const typeSelect = document.querySelector("[name='Current.TransactionType']");
+    const typeSelect = document.getElementById("typeSelect");
         
     function updatePriceBehavior() {
         const selected = watchSelect.options[watchSelect.selectedIndex];
+        if(!selected || selected.value === "") return;
+
         const price = selected.getAttribute("data-price") || 0;
 
         if (typeSelect.value === "Sell") {
             priceInput.value = price;
             priceInput.readOnly = true;
+            priceInput.style.opacity = "0.6";
         } else {
             priceInput.readOnly = false;
-
+            priceInput.style.opacity = "1";
             if (!priceInput.value || priceInput.value == "0") {
                 priceInput.value = price;
             }

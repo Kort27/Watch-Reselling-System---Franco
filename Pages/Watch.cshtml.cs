@@ -28,27 +28,17 @@ namespace Watch_Reselling_System___Franco.Pages
         [BindProperty(SupportsGet = true)]
         public int? DeleteId { get; set; }
 
-<<<<<<< HEAD
-        // SEARCH
-=======
-        
->>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
         [BindProperty(SupportsGet = true)]
         public string SearchTerm { get; set; }
 
         public bool IsEdit => EditId.HasValue;
 
-        
         public void OnGet()
         {
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             conn.Open();
 
-<<<<<<< HEAD
-            //  DELETE
-=======
-            
->>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
+            // --- DELETE LOGIC ---
             if (DeleteId.HasValue)
             {
                 try
@@ -59,11 +49,7 @@ namespace Watch_Reselling_System___Franco.Pages
                 }
                 catch (SqlException ex)
                 {
-<<<<<<< HEAD
-                    // Check if it's a Foreign Key violation 
-=======
-                    
->>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
+                    // Check for Foreign Key violation (Error 547)
                     if (ex.Number == 547)
                     {
                         TempData["Error"] = "Cannot delete this watch because it has transaction records.";
@@ -73,20 +59,11 @@ namespace Watch_Reselling_System___Franco.Pages
                         TempData["Error"] = "An error occurred while deleting.";
                     }
                 }
-
-<<<<<<< HEAD
-                Response.Redirect("/Watch"); // Or whatever  page name
+                Response.Redirect("/Watch");
                 return;
             }
 
-            //  EDIT LOAD
-=======
-                Response.Redirect("/Watch"); 
-                return;
-            }
-
-            
->>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
+            // --- EDIT LOAD LOGIC ---
             if (EditId.HasValue)
             {
                 var cmd = new SqlCommand("SELECT * FROM Watch WHERE watch_id=@id", conn);
@@ -105,9 +82,10 @@ namespace Watch_Reselling_System___Franco.Pages
                         stock = SafeInt(reader["stock"])
                     };
                 }
+                reader.Close(); // Close reader before running the next command
             }
 
-            //  LOAD LIST WITH SEARCH
+            // --- LOAD LIST WITH SEARCH ---
             var listCmd = new SqlCommand(@"
                 SELECT * FROM Watch
                 WHERE (@search IS NULL OR watch_modelname LIKE '%' + @search + '%')
@@ -131,7 +109,7 @@ namespace Watch_Reselling_System___Franco.Pages
             }
         }
 
-        // ========================= POST =========================
+        // --- CREATE / UPDATE LOGIC ---
         public IActionResult OnPost()
         {
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
@@ -139,11 +117,7 @@ namespace Watch_Reselling_System___Franco.Pages
 
             if (Current.watch_id > 0)
             {
-<<<<<<< HEAD
-                //  UPDATE
-=======
-                // Update
->>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
+                // UPDATE Existing Record
                 var cmd = new SqlCommand(@"
                     UPDATE Watch 
                     SET watch_modelname=@m, condition=@c, price=@p, stock=@s
@@ -151,7 +125,7 @@ namespace Watch_Reselling_System___Franco.Pages
 
                 cmd.Parameters.AddWithValue("@id", Current.watch_id);
                 cmd.Parameters.AddWithValue("@m", Current.watch_modelname);
-                cmd.Parameters.AddWithValue("@c", Current.condition);
+                cmd.Parameters.AddWithValue("@c", Current.condition ?? "");
                 cmd.Parameters.AddWithValue("@p", Current.price);
                 cmd.Parameters.AddWithValue("@s", Current.stock);
 
@@ -159,17 +133,13 @@ namespace Watch_Reselling_System___Franco.Pages
             }
             else
             {
-<<<<<<< HEAD
-                // INSERT
-=======
-                // Edit
->>>>>>> 86d457dd03777f104abe85e96ac3f84369b4ebd6
+                // INSERT New Record
                 var cmd = new SqlCommand(@"
                     INSERT INTO Watch (watch_modelname, condition, price, stock)
                     VALUES (@m, @c, @p, @s)", conn);
 
                 cmd.Parameters.AddWithValue("@m", Current.watch_modelname);
-                cmd.Parameters.AddWithValue("@c", Current.condition);
+                cmd.Parameters.AddWithValue("@c", Current.condition ?? "");
                 cmd.Parameters.AddWithValue("@p", Current.price);
                 cmd.Parameters.AddWithValue("@s", Current.stock);
 
@@ -179,7 +149,7 @@ namespace Watch_Reselling_System___Franco.Pages
             return RedirectToPage("/Watch");
         }
 
-        
+        // --- HELPER METHODS ---
         private int SafeInt(object v) => v == DBNull.Value ? 0 : Convert.ToInt32(v);
         private decimal SafeDecimal(object v) => v == DBNull.Value ? 0 : Convert.ToDecimal(v);
         private string SafeString(object v) => v == DBNull.Value ? "" : v.ToString();
